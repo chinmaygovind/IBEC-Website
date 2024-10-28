@@ -1767,7 +1767,7 @@ input, select, textarea {
 		header > p {
 			display: block;
 			font-size: 1.5em;
-			margin: 1em 0 2em 0;
+			margin: 3em 3em 2em 0;
 			line-height: 1.5em;
 			text-align: inherit;
 		}
@@ -2290,6 +2290,17 @@ input, select, textarea {
 		padding: 1.5em 0 1.5em 0;
 		z-index: 1;
 		overflow: hidden;
+		font-weight: 1000;
+		font-size: larger;
+	}
+	#nav-logo {
+		line-height: 0px;
+		position: absolute;
+		top: 0.3em;
+		left: 0.5em;
+		display: inline;
+		height: 2em;
+		z-index: 100;
 	}
 
 		#nav > ul {
@@ -2415,7 +2426,7 @@ input, select, textarea {
 	}
 
 		#banner header > p {
-			margin-bottom: 0;
+			margin: 0 2em 0 2em;
 		}
 
 /* Content */
@@ -2489,8 +2500,8 @@ input, select, textarea {
 
 		#footer .copyright {
 			text-align: center;
-			color: rgba(128, 128, 128, 0.75);
-			font-size: 0.8em;
+			color: rgba(202, 202, 202, 0.75);
+			font-size: 1.2em;
 			cursor: default;
 		}
 
@@ -3136,3 +3147,22 @@ input, select, textarea {
 					}
 
 	}
+
+.timeline {
+	margin-left: 2em;
+	border: solid;
+	border-color: transparent rgb(9, 40, 119);
+}
+#timeline-h1 {
+	
+	font-size: 3em;
+	margin-left: 0.2em;
+}
+
+.timeline-container {
+	border: solid rgb(56, 133, 210) 0.2rem;
+	width: 30%;
+	margin-top: 1%;
+	padding: 0.5%;
+	margin-left: 2%;
+}
