@@ -25,7 +25,7 @@ document.write(`
                 </li>
                 <li><a href="events.html">Events</a></li>
                 <li><a href="membership.html">Membership</a></li>
-                <li><a href="contact.html">Contact</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
             </ul>
         </nav>
 
