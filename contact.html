@@ -26,7 +26,7 @@
 								<a href="https://docs.google.com/forms/d/e/1FAIpQLSdW_QJCRlFoJFDIhNm71FNUQIY0bPldKvBK7aGfZrbHYR-3lg/viewform" class="button primary">Join Our Listserv</a>
 							</p>
 						</header>
-						<section class="contact-team" style="text-align: center; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+						<section id="grid-container" class="contact-team" style="text-align: center; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
 							<div class="team-member">
 								<img src="images/team/wade_parzick.jpg" alt="Wade Parzick" style="width: 250px; height: 250px; border-radius: 50%;" />
 								<h3>Wade Parzick</h3>
@@ -58,13 +58,19 @@
 								<p style="text-align: center; margin-bottom: 0;"><a href="mailto:sdaless@sas.upenn.edu">sdaless@sas.upenn.edu</a></p>
 							</div>
 							<div class="team-member">
+								<img src="images/team/chinmay_govind.jpg" alt="Chinmay Govind" style="width: 250px; height: 250px; border-radius: 50%;" />
+								<h3>Chinmay Govind</h3>
+								<p style="text-align: center; margin-bottom: 0;">Technology Chair</p>
+								<p style="text-align: center; margin-bottom: 0;"><a href="mailto:cgovind@seas.upenn.edu">cgovind@seas.upenn.edu</a></p>
+							</div>
+							<div class="team-member">
 								<img src="images/team/trenton_ryu.jpg" alt="Trenton Ryu" style="width: 250px; height: 250px; border-radius: 50%;" />
 								<h3>Trenton Ryu</h3>
 								<p style="text-align: center; margin-bottom: 0;">Operations Chair</p>
 								<p style="text-align: center; margin-bottom: 0;"><a href="mailto:tryu@sas.upenn.edu">tryu@sas.upenn.edu</a></p>
 							</div>
 							<div class="team-member">
-								<img src="images/team/unknown.png" alt="Cole Woodward" style="width: 250px; height: 250px; border-radius: 50%;" />
+								<img src="images/team/cole_woodward.JPG" alt="Cole Woodward" style="width: 250px; height: 250px; border-radius: 50%;" />
 								<h3>Cole Woodward</h3>
 								<p style="text-align: center; margin-bottom: 0;">North American Committee Chair</p>
 								<p style="text-align: center; margin-bottom: 0;"><a href="mailto:colewood@sas.upenn.edu">colewood@sas.upenn.edu</a></p>
@@ -101,6 +107,22 @@
 							</div>							
 						</section>
 					</article>
+					<script>
+						function adjustGridLayout() {
+						  const grid = document.getElementById("grid-container");
+						  if (window.innerWidth >= 768) {
+							grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+						  } else {
+							grid.style.gridTemplateColumns = 'repeat(1, 1fr)';
+						  }
+						}
+					  
+						// Run on page load
+						adjustGridLayout();
+						
+						// Run on window resize
+						window.addEventListener('resize', adjustGridLayout);
+					  </script>
 				</div>
 
 			</div>
