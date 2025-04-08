@@ -1,0 +1,402 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>IBEC - Interactive Portfolio</title>
+  <link rel="icon" type="image/x-icon" href="images/ibec.ico">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+  <style>
+    .chart-container {
+      width: 90vw;
+      height: 70vh;
+      margin: 20px auto 10px auto;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      position: relative;
+    }
+    #customTooltip {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 8px 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      pointer-events: none;
+      visibility: hidden;
+      font-size: 14px;
+      transition: visibility 0.1s;
+      z-index: 10;
+    }
+    .data-table {
+      width: 90vw;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .data-table th, .data-table td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .data-table thead {
+      background: #007bff;
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="no-sidebar is-preload">
+  <div id="page-wrapper">
+    <script src="header.js"></script>
+    <div class="wrapper style1">
+      <div id="customTooltip"></div>
+	  <h1 style="font-size: 2em; text-align: center;">IBEC Portfolio</h1><div class="chart-container">
+        <canvas id="portfolioChart"></canvas>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Purchase Dates</th>
+            <th>Company</th>
+            <th>Price at Purchase</th>
+            <th>Cost Basis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Nov 25</td><td>Tata Motors</td><td>$9.40</td><td>$1880</td></tr>
+          <tr><td>Nov 25</td><td>YPF</td><td>$40.00</td><td>$2000</td></tr>
+          <tr><td>Dec 16</td><td>Tencent</td><td>$51.72</td><td>$3000</td></tr>
+          <tr><td>Dec 16</td><td>Iberdrola</td><td>$13.53</td><td>$1000</td></tr>
+          <tr><td>Feb 10</td><td>Starbulk</td><td>$15.63</td><td>$3000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="footer">
+      <div class="copyright">
+        <ul class="menu">
+          <li>International Business and Economics Club, University of Pennsylvania, Philadelphia, PA. All rights reserved.</li>
+          <li>LinkedIn: <a href="https://www.linkedin.com/groups/14548358">Penn International Business and Economics Club</a></li>
+          <li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/jquery.dropotron.min.js"></script>
+  <script src="assets/js/jquery.scrolly.min.js"></script>
+  <script src="assets/js/jquery.scrollex.min.js"></script>
+  <script src="assets/js/browser.min.js"></script>
+  <script src="assets/js/breakpoints.min.js"></script>
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Global variable for drag data.
+    // It stores the initial index (from x coordinate) and the current snapped index.
+    let dragData = null;
+
+    // Minimal month names array for formatting
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Chart data: dates and portfolio values
+    const purchaseDates = [
+      "11/26/2024", "11/27/2024", "11/29/2024", "12/2/2024", "12/3/2024",
+      "12/4/2024", "12/5/2024", "12/6/2024", "12/9/2024", "12/10/2024",
+      "12/11/2024", "12/12/2024", "12/13/2024", "12/16/2024", "12/17/2024",
+      "12/18/2024", "12/19/2024", "12/20/2024", "12/23/2024", "12/24/2024",
+      "12/26/2024", "12/27/2024", "12/30/2024", "12/31/2024", "1/2/2025",
+      "1/3/2025", "1/6/2025", "1/7/2025", "1/8/2025", "1/10/2025",
+      "1/13/2025", "1/14/2025", "1/15/2025", "1/16/2025", "1/17/2025",
+      "1/21/2025", "1/22/2025", "1/23/2025", "1/24/2025", "1/27/2025",
+      "1/28/2025", "1/29/2025", "1/30/2025", "1/31/2025", "2/3/2025",
+      "2/4/2025", "2/5/2025", "2/6/2025", "2/7/2025", "2/10/2025",
+      "2/11/2025", "2/12/2025", "2/13/2025", "2/14/2025", "2/17/2025",
+      "2/18/2025", "2/19/2025", "2/20/2025", "2/21/2025", "2/24/2025",
+      "2/25/2025", "2/26/2025", "2/27/2025", "2/28/2025", "3/3/2025",
+      "3/4/2025", "3/5/2025", "3/6/2025", "3/7/2025", "3/10/2025",
+      "3/11/2025", "3/12/2025", "3/13/2025", "3/14/2025", "3/17/2025",
+      "3/18/2025", "3/19/2025", "3/20/2025", "3/21/2025", "3/24/2025",
+      "3/25/2025", "3/26/2025", "3/27/2025", "3/28/2025", "3/31/2025",
+      "4/1/2025", "4/2/2025", "4/3/2025", "4/4/2025"
+    ];
+
+    const portfolioValues = [
+      99994.84, 100000.7, 99986.98, 100022.48, 100027.12,
+      100050.5, 99930.44, 99945.12, 100023.82, 100062.5,
+      100072.26, 100193.84, 100205.24, 100212.98, 100243.86,
+      99980.92, 100015.88, 100095.86, 100085.06, 100140.36,
+      100161.66, 100136.58, 100064.88, 100090.5, 100277.22,
+      100321.32, 100098.02, 100130.22, 100071.8, 99963.7,
+      99843.36, 99956.84, 100017.92, 99980.08, 99972.82,
+      99955.06, 99886.9, 99856.72, 99823.98, 99766.08,
+      99863.56, 99981.08, 99984.22, 99896.66, 99739,
+      99962.48, 99899.18, 99928.06, 99893.12, 99977.3604,
+      99747.9222, 99911.6768, 100035.82, 100265.134, 100277.194,
+      100488.3966, 100144.8024, 100542.22, 100400.919, 100069.0032,
+      100098.49, 100259.1144, 100068.7888, 99967.7622, 99810.8662,
+      99953.2088, 100229.7178, 100353.2902, 100392.3158, 100090.215,
+      100206.2726, 100450.81, 100402.416, 100646.124, 100779.587,
+      100711.8192, 100861.7436, 100727.611, 100694.7852, 100617.4208,
+      100644.868, 100614.2528, 100592.4854, 100490.2612, 100285.5464,
+      100387.7768, 100349.381, 99981.8474, 99197.4752
+    ];
+
+    // External tooltip functionality (unchanged)
+    const externalTooltipEl = document.getElementById('customTooltip');
+    function externalTooltipHandler(context) {
+      const { tooltip } = context;
+      if (!tooltip || !tooltip.dataPoints || tooltip.dataPoints.length === 0) {
+        externalTooltipEl.style.visibility = 'hidden';
+        return;
+      }
+      externalTooltipEl.style.visibility = 'visible';
+      const dataPoint = tooltip.dataPoints[0];
+      const label = dataPoint.label;
+      const numericValue = dataPoint.parsed.y;
+      const formattedValue = numericValue.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      externalTooltipEl.innerHTML = `Date: ${label}<br>Value: $${formattedValue}`;
+    }
+
+    // Interactive vertical dashed line that follows the mouse (unchanged)
+    const verticalLinePlugin = {
+      id: 'verticalLinePlugin',
+      afterEvent(chart, args) {
+        const event = args.event;
+        chart.verticalLineX = event.x;
+      },
+      afterDraw(chart) {
+        if (chart.verticalLineX) {
+          const ctx = chart.ctx;
+          const x = chart.verticalLineX;
+          const topY = chart.scales.y.top;
+          const bottomY = chart.scales.y.bottom;
+          ctx.save();
+          ctx.setLineDash([5, 3]);
+          ctx.beginPath();
+          ctx.moveTo(x, topY);
+          ctx.lineTo(x, bottomY);
+          ctx.lineWidth = 1.2;
+          ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    };
+
+    // Define combined purchase events (vertical dashed lines) with black color
+    const purchaseEvents = [
+      { date: "11/26/2024", label: "Tata Motors/YPF", color: "#000000" },
+      { date: "12/16/2024", label: "Tencent/Iberdrola", color: "#000000" },
+      { date: "2/10/2025",  label: "Starbulk", color: "#000000" }
+    ];
+
+    // Plugin to draw vertical dashed lines for purchase events and caption text (unchanged)
+    const purchaseEventLinesPlugin = {
+      id: 'purchaseEventLinesPlugin',
+      afterDraw(chart) {
+        const xScale = chart.scales.x;
+        const yScale = chart.scales.y;
+        const ctx = chart.ctx;
+        purchaseEvents.forEach(event => {
+          // Get pixel for the given event date
+          const x = xScale.getPixelForValue(event.date);
+          if (x) {
+            ctx.save();
+            ctx.setLineDash([5, 3]);
+            ctx.beginPath();
+            ctx.moveTo(x, yScale.top);
+            ctx.lineTo(x, yScale.bottom);
+            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = event.color;
+            ctx.stroke();
+            // Draw caption text to the right of the dotted line near the bottom of the graph
+            ctx.font = "8px Arial";
+            ctx.fillStyle = event.color;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(event.label, x + 5, yScale.bottom - 10);
+            ctx.restore();
+          }
+        });
+      }
+    };
+
+    // Plugin to handle click-and-drag (only along x–axis) and fill the area under the curve
+    // between the selected (snapped) data points. The difference is computed between those points.
+    const dragPlugin = {
+      id: 'dragPlugin',
+      afterDraw(chart) {
+        if (dragData && typeof dragData.currentIndex !== 'undefined') {
+          const ctx = chart.ctx;
+          const meta = chart.getDatasetMeta(0);
+          // Ensure indices are ordered left-to-right
+          const startIndex = Math.min(dragData.initialIndex, dragData.currentIndex);
+          const endIndex = Math.max(dragData.initialIndex, dragData.currentIndex);
+          const startElement = meta.data[startIndex];
+          const endElement = meta.data[endIndex];
+          if (!startElement || !endElement) return;
+          const startX = startElement.x;
+          const endX = endElement.x;
+          // Get all data point elements between the two indices
+          const points = meta.data.slice(startIndex, endIndex + 1);
+          // Compute difference using snapped data point values
+          const initialPrice = portfolioValues[startIndex];
+          const currentPrice = portfolioValues[endIndex];
+          const diff = currentPrice - initialPrice;
+          const percentage = (diff / initialPrice) * 100;
+          const isPositive = diff >= 0;
+          // Create a vertical gradient from the top of the selected region to the x-axis
+          const topY = Math.min(...points.map(p => p.y));
+          const gradientFill = ctx.createLinearGradient(0, topY, 0, chart.chartArea.bottom);
+          gradientFill.addColorStop(0, isPositive ? "rgba(0,255,0,0.4)" : "rgba(255,0,0,0.4)");
+          gradientFill.addColorStop(1, isPositive ? "rgba(0,255,0,0)" : "rgba(255,0,0,0)");
+          ctx.save();
+          ctx.beginPath();
+          // Follow the curve between the selected data points
+          ctx.moveTo(points[0].x, points[0].y);
+          for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+          }
+          // Close the path: from the last point straight down to the x-axis then back to start
+          ctx.lineTo(points[points.length - 1].x, chart.chartArea.bottom);
+          ctx.lineTo(points[0].x, chart.chartArea.bottom);
+          ctx.closePath();
+          ctx.fillStyle = gradientFill;
+          ctx.fill();
+          // Draw the difference text at the 99500 mark (converted to a pixel)
+          const textY = chart.scales.y.getPixelForValue(99500);
+          // Place the text centered horizontally between start and end points
+          const textX = (startX + endX) / 2;
+          const text = (diff >= 0 ? "+" : "") + "$" + diff.toFixed(2) + " (" + percentage.toFixed(2) + "%)";
+          ctx.font = "12px Arial";
+          // Set text color: green if positive, red if negative
+          ctx.fillStyle = isPositive ? "green" : "red";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(text, textX, textY);
+          ctx.restore();
+        }
+      }
+    };
+
+    // Build the default gradient for the chart’s fill (blue)
+    // Updated gradient: more intense at the top and extends further down.
+    const canvas = document.getElementById('portfolioChart');
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, 'rgba(0,123,255,0.5)');      // Stronger at the top
+    gradient.addColorStop(0.7, 'rgba(0,123,255,0.3)');      // Maintained intensity until 70%
+    gradient.addColorStop(1, 'rgba(0,123,255,0)');          // Fades out to transparent at the bottom
+
+    // Create the chart with all plugins
+    const portfolioChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: purchaseDates,
+        datasets: [{
+          label: 'Portfolio Value',
+          data: portfolioValues,
+          borderColor: '#007bff',
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.2,
+          borderWidth: 2,
+          pointRadius: 2,
+          pointHoverRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        onClick(event) {
+          const points = portfolioChart.getElementsAtEventForMode(
+            event,
+            'nearest',
+            { intersect: true },
+            false
+          );
+          if (points.length) {
+            const firstPoint = points[0];
+            const label = portfolioChart.data.labels[firstPoint.index];
+            const value = portfolioChart.data.datasets[0].data[firstPoint.index];
+            alert(`Date: ${label}\nValue: $${value.toFixed(2)}`);
+          }
+        },
+        plugins: {
+          tooltip: { enabled: false, external: externalTooltipHandler },
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { display: true, drawTicks: true, tickLength: 5 },
+            ticks: {
+              maxTicksLimit: 5,
+              callback: function(value) {
+                const dateStr = this.getLabelForValue(value);
+                const [mm, dd] = dateStr.split('/');
+                const monthIndex = parseInt(mm, 10) - 1;
+                const shortMonth = monthNames[monthIndex] || '???';
+                return `${shortMonth} ${parseInt(dd, 10)}`;
+              }
+            }
+          },
+          y: {
+            grid: { color: '#ddd', drawTicks: true, tickLength: 5 },
+            ticks: {
+              maxTicksLimit: 6,
+              callback: function(value) { return '$' + value.toLocaleString(); }
+            }
+          }
+        }
+      },
+      plugins: [verticalLinePlugin, purchaseEventLinesPlugin, dragPlugin]
+    });
+
+    // Use only the x–axis for drag detection:
+    // Map the mouse x–coordinate relative to the chart area to the nearest index.
+    portfolioChart.canvas.addEventListener('mousedown', function(e) {
+      const chartArea = portfolioChart.chartArea;
+      const rect = portfolioChart.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const index = Math.round((x - chartArea.left) / chartArea.width * (portfolioChart.data.labels.length - 1));
+      dragData = { initialIndex: index, initialPrice: portfolioValues[index] };
+    });
+
+    portfolioChart.canvas.addEventListener('mousemove', function(e) {
+      if (dragData) {
+        const chartArea = portfolioChart.chartArea;
+        const rect = portfolioChart.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const index = Math.round((x - chartArea.left) / chartArea.width * (portfolioChart.data.labels.length - 1));
+        dragData.currentIndex = index;
+        dragData.currentPrice = portfolioValues[index];
+        portfolioChart.draw();
+      }
+    });
+
+    portfolioChart.canvas.addEventListener('mouseup', function(e) {
+      dragData = null;
+      portfolioChart.draw();
+    });
+
+    portfolioChart.canvas.addEventListener('mouseleave', function(e) {
+      dragData = null;
+      portfolioChart.draw();
+    });
+  </script>
+</body>
+</html>

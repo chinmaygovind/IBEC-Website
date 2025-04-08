@@ -25,6 +25,7 @@ document.write(`
                 </li>
                 <li><a href="events.html">Events</a></li>
                 <li><a href="competition.html">Competition</a></li>
+                <li><a href="portfolio.html">Portfolio</a></li>
                 <li><a href="contact.html">Contact Us</a></li>
             </ul>
         </nav>
