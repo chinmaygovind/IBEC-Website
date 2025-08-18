@@ -306,6 +306,7 @@
                   <th>Company</th>
                   <th>Shares</th>
                   <th>Purchase Date</th>
+                  <th>Purchase Price</th>
                   <th>Current Price</th>
                   <th>Market Value</th>
                   <th>P&L</th>
@@ -336,6 +337,60 @@
     let portfolioChart = null;
     const INITIAL_CAPITAL = 100000;
 
+    // Currency conversion function
+    async function convertToUSD(amount, fromCurrency) {
+      if (fromCurrency === 'USD') {
+        return amount; // Already in USD
+      }
+      
+      try {
+        console.log(`Converting ${amount} ${fromCurrency} to USD`);
+        
+        // Try multiple currency conversion APIs
+        const apis = [
+          `https://api.exchangerate-api.com/v4/latest/${fromCurrency}`,
+          `https://api.fxapi.com/v1/latest?base=${fromCurrency}&symbols=USD`,
+          `https://api.currencyapi.com/v3/latest?apikey=YOUR_API_KEY&base_currency=${fromCurrency}&currencies=USD`
+        ];
+        
+        for (const apiUrl of apis) {
+          try {
+            // Skip APIs that require API keys for this demo
+            if (apiUrl.includes('YOUR_API_KEY')) continue;
+            
+            const response = await fetch(apiUrl);
+            if (response.ok) {
+              const data = await response.json();
+              let exchangeRate = null;
+              
+              // Handle different API response formats
+              if (data.rates && data.rates.USD) {
+                exchangeRate = data.rates.USD;
+              } else if (data.data && data.data.USD && data.data.USD.value) {
+                exchangeRate = data.data.USD.value;
+              }
+              
+              if (exchangeRate) {
+                const convertedAmount = amount * exchangeRate;
+                console.log(`✅ Converted ${amount} ${fromCurrency} to $${convertedAmount.toFixed(2)} USD (rate: ${exchangeRate})`);
+                return convertedAmount;
+              }
+            }
+          } catch (error) {
+            console.log(`Currency API failed: ${error.message}`);
+            continue;
+          }
+        }
+        
+        // No fallback rates - throw error if conversion fails
+        throw new Error(`Unable to convert ${fromCurrency} to USD - all currency APIs failed`);
+        
+      } catch (error) {
+        console.error(`Currency conversion failed for ${fromCurrency}:`, error);
+        throw new Error(`Currency conversion failed: ${error.message}`);
+      }
+    }
+
     async function loadPortfolioData() {
       try {
         // Load trades from CSV
@@ -347,12 +402,17 @@
         const stockPrices = await fetchStockPrices(trades);
         console.log('Stock prices:', stockPrices);
         
+        // Get historical purchase prices
+        document.getElementById('lastUpdated').textContent = 'Fetching historical purchase prices...';
+        const historicalPrices = await fetchHistoricalPrices(trades);
+        console.log('Historical prices:', historicalPrices);
+        
         // Update timestamp
         const now = new Date();
         document.getElementById('lastUpdated').textContent = `Prices updated: ${now.toLocaleString()}`;
         
         // Calculate portfolio performance
-        const portfolioData = calculatePortfolioPerformance(trades, stockPrices);
+        const portfolioData = calculatePortfolioPerformance(trades, stockPrices, historicalPrices);
         console.log('Portfolio data:', portfolioData);
         
         // Update UI
@@ -406,69 +466,92 @@
           console.log(`\n--- Fetching ${i + 1}/${uniqueTickers.length}: ${ticker} ---`);
           
           try {
-            // Using a CORS proxy to access Yahoo Finance
-            const proxyUrl = 'https://api.allorigins.win/raw?url=';
-            const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
-            const fullUrl = proxyUrl + encodeURIComponent(yahooUrl);
+            // Try multiple CORS proxies for better reliability
+            const proxies = [
+              'https://corsproxy.io/?',
+              'https://api.allorigins.win/raw?url=',
+              'https://cors-anywhere.herokuapp.com/'
+            ];
             
-            console.log(`Proxy URL: ${proxyUrl}`);
-            console.log(`Yahoo Finance URL: ${yahooUrl}`);
-            console.log(`Full request URL: ${fullUrl}`);
+            let success = false;
+            let lastError = null;
             
-            const startTime = Date.now();
-            console.log(`Making API request at: ${new Date().toISOString()}`);
-            
-            const response = await fetch(fullUrl);
-            const endTime = Date.now();
-            const responseTime = endTime - startTime;
-            
-            console.log(`Response received in ${responseTime}ms`);
-            console.log(`Response status: ${response.status} ${response.statusText}`);
-            console.log(`Response headers:`, Object.fromEntries(response.headers.entries()));
-            
-            if (response.ok) {
-              const rawData = await response.text();
-              console.log(`Raw response length: ${rawData.length} characters`);
-              console.log(`First 200 chars of response:`, rawData.substring(0, 200));
-              
-              let data;
+            for (const proxyUrl of proxies) {
               try {
-                data = JSON.parse(rawData);
-                console.log(`JSON parsed successfully`);
-                console.log(`Response structure:`, {
-                  hasChart: !!data.chart,
-                  hasResult: !!data.chart?.result,
-                  resultLength: data.chart?.result?.length,
-                  hasMeta: !!data.chart?.result?.[0]?.meta,
-                  hasRegularMarketPrice: !!data.chart?.result?.[0]?.meta?.regularMarketPrice
-                });
-              } catch (parseError) {
-                console.error(`JSON parsing failed:`, parseError);
-                throw new Error(`Invalid JSON response for ${ticker}`);
-              }
-              
-              if (data.chart?.result?.[0]?.meta?.regularMarketPrice) {
-                const price = data.chart.result[0].meta.regularMarketPrice;
-                const meta = data.chart.result[0].meta;
+                const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
+                const fullUrl = proxyUrl + encodeURIComponent(yahooUrl);
                 
-                prices[ticker] = price;
-                console.log(`✅ SUCCESS: ${ticker} = $${price}`);
-                console.log(`Additional info:`, {
-                  currency: meta.currency,
-                  exchangeName: meta.exchangeName,
-                  marketState: meta.marketState,
-                  previousClose: meta.previousClose,
-                  regularMarketTime: new Date(meta.regularMarketTime * 1000).toISOString()
-                });
-              } else {
-                console.error(`❌ No price data found in response for ${ticker}`);
-                console.log(`Full response data:`, data);
-                throw new Error(`No price data for ${ticker}`);
+                console.log(`Trying proxy: ${proxyUrl}`);
+                console.log(`Yahoo Finance URL: ${yahooUrl}`);
+                console.log(`Full request URL: ${fullUrl}`);
+                
+                const startTime = Date.now();
+                console.log(`Making API request at: ${new Date().toISOString()}`);
+                
+                const response = await fetch(fullUrl);
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                console.log(`Response received in ${responseTime}ms`);
+                console.log(`Response status: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                  const rawData = await response.text();
+                  console.log(`Raw response length: ${rawData.length} characters`);
+                  console.log(`Response:`, rawData);
+                  
+                  let data;
+                  try {
+                    data = JSON.parse(rawData);
+                    console.log(`JSON parsed successfully`);
+                    console.log(`Response structure:`, {
+                      hasChart: !!data.chart,
+                      hasResult: !!data.chart?.result,
+                      resultLength: data.chart?.result?.length,
+                      hasMeta: !!data.chart?.result?.[0]?.meta,
+                      hasRegularMarketPrice: !!data.chart?.result?.[0]?.meta?.regularMarketPrice
+                    });
+                  } catch (parseError) {
+                    console.error(`JSON parsing failed:`, parseError);
+                    throw new Error(`Invalid JSON response for ${ticker}`);
+                  }
+                  
+                  if (data.chart?.result?.[0]?.meta?.regularMarketPrice) {
+                    const price = data.chart.result[0].meta.regularMarketPrice;
+                    const meta = data.chart.result[0].meta;
+                    const currency = meta.currency || 'USD';
+                    
+                    // Convert price to USD if necessary
+                    const priceInUSD = await convertToUSD(price, currency);
+                    prices[ticker] = priceInUSD;
+                    
+                    console.log(`✅ SUCCESS: ${ticker} = ${price} ${currency} → $${priceInUSD.toFixed(2)} USD`);
+                    console.log(`Additional info:`, {
+                      originalPrice: price,
+                      currency: currency,
+                      convertedPriceUSD: priceInUSD,
+                      exchangeName: meta.exchangeName,
+                      marketState: meta.marketState,
+                      previousClose: meta.previousClose,
+                      regularMarketTime: new Date(meta.regularMarketTime * 1000).toISOString()
+                    });
+                    success = true;
+                    break; // Exit the proxy loop on success
+                  } else {
+                    throw new Error(`No price data found in response for ${ticker}`);
+                  }
+                } else {
+                  throw new Error(`API request failed: ${response.status}`);
+                }
+              } catch (proxyError) {
+                console.log(`❌ Proxy ${proxyUrl} failed:`, proxyError.message);
+                lastError = proxyError;
+                continue; // Try next proxy
               }
-            } else {
-              console.error(`❌ API request failed for ${ticker}`);
-              console.log(`Response body:`, await response.text());
-              throw new Error(`API request failed for ${ticker}: ${response.status}`);
+            }
+            
+            if (!success) {
+              throw lastError || new Error(`All proxies failed for ${ticker}`);
             }
             
             // Add small delay to avoid rate limiting
@@ -485,34 +568,14 @@
               stack: error.stack
             });
             
-            // Fallback to estimated prices if API fails
-            const fallbackPrices = {
-              'TATAMOTORS': 22.50,    // Tata Motors
-              'YPF': 28.75,           // YPF
-              'TCEHY': 45.30,         // Tencent ADR
-              'IBDRY': 42.15,         // Iberdrola ADR
-              'SBLK': 18.90           // Starbulk
-            };
-            if (fallbackPrices[ticker]) {
-              prices[ticker] = fallbackPrices[ticker];
-              console.log(`🔄 Using fallback price for ${ticker}: $${prices[ticker]}`);
-            } else {
-              console.error(`❌ No fallback price available for ${ticker}`);
-            }
+            // No fallback - let it fail
+            throw new Error(`Failed to fetch price for ${ticker}: ${error.message}`);
           }
         }
       } catch (error) {
         console.error('❌ Critical error in fetchStockPrices:', error);
-        // Use fallback prices if everything fails
-        const fallbackPrices = {
-          'TATAMOTORS': 22.50,    // Tata Motors
-          'YPF': 28.75,           // YPF
-          'TCEHY': 45.30,         // Tencent ADR
-          'IBDRY': 42.15,         // Iberdrola ADR
-          'SBLK': 18.90           // Starbulk
-        };
-        console.log('🔄 Using all fallback prices due to critical error');
-        Object.assign(prices, fallbackPrices);
+        // No fallback - let it fail completely
+        throw new Error(`Critical error fetching stock prices: ${error.message}`);
       }
       
       console.log('\n=== FINAL RESULTS ===');
@@ -524,25 +587,111 @@
       return prices;
     }
 
-    function calculatePortfolioPerformance(trades, stockPrices) {
+    async function fetchHistoricalPrices(trades) {
+      const historicalPrices = {};
+      
+      console.log('=== HISTORICAL PRICE FETCHING DEBUG INFO ===');
+      
+      try {
+        for (const trade of trades) {
+          const ticker = trade.ticker;
+          const purchaseDate = trade.purchaseDate;
+          
+          console.log(`\n--- Fetching historical price for ${ticker} on ${purchaseDate} ---`);
+          
+          try {
+            // Convert date to timestamp for Yahoo Finance API
+            const date = new Date(purchaseDate);
+            const timestamp = Math.floor(date.getTime() / 1000);
+            const nextDay = new Date(date);
+            nextDay.setDate(date.getDate() + 1);
+            const endTimestamp = Math.floor(nextDay.getTime() / 1000);
+            
+            console.log(`Date: ${purchaseDate}, Timestamp: ${timestamp}, End: ${endTimestamp}`);
+            
+            // Try multiple CORS proxies for better reliability
+            const proxies = [
+              'https://corsproxy.io/?',
+              'https://api.allorigins.win/raw?url=',
+              'https://cors-anywhere.herokuapp.com/'
+            ];
+            
+            let success = false;
+            let lastError = null;
+            
+            for (const proxyUrl of proxies) {
+              try {
+                const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${timestamp}&period2=${endTimestamp}&interval=1d`;
+                const fullUrl = proxyUrl + encodeURIComponent(yahooUrl);
+                
+                console.log(`Trying historical proxy: ${proxyUrl}`);
+                console.log(`Historical Yahoo Finance URL: ${yahooUrl}`);
+                
+                const response = await fetch(fullUrl);
+                
+                if (response.ok) {
+                  const rawData = await response.text();
+                  const data = JSON.parse(rawData);
+                  
+                  if (data.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.[0]) {
+                    const closePrice = data.chart.result[0].indicators.quote[0].close[0];
+                    const meta = data.chart.result[0].meta;
+                    const currency = meta?.currency || 'USD';
+                    
+                    // Convert historical price to USD if necessary
+                    const closePriceInUSD = await convertToUSD(closePrice, currency);
+                    historicalPrices[`${ticker}_${purchaseDate}`] = closePriceInUSD;
+                    
+                    console.log(`✅ SUCCESS: ${ticker} on ${purchaseDate} = ${closePrice} ${currency} → $${closePriceInUSD.toFixed(2)} USD`);
+                    success = true;
+                    break; // Exit proxy loop on success
+                  } else {
+                    throw new Error(`No historical data found for ${ticker} on ${purchaseDate}`);
+                  }
+                } else {
+                  throw new Error(`API request failed: ${response.status}`);
+                }
+              } catch (proxyError) {
+                console.log(`❌ Historical proxy ${proxyUrl} failed:`, proxyError.message);
+                lastError = proxyError;
+                continue; // Try next proxy
+              }
+            }
+            
+            if (!success) {
+              throw lastError || new Error(`All proxies failed for historical data: ${ticker} on ${purchaseDate}`);
+            }
+            
+            // Add delay to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+          } catch (error) {
+            console.error(`❌ Failed to fetch historical price for ${ticker} on ${purchaseDate}:`, error);
+            throw new Error(`Failed to fetch historical price for ${ticker} on ${purchaseDate}: ${error.message}`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Critical error in fetchHistoricalPrices:', error);
+      }
+      
+      console.log('\n=== HISTORICAL PRICES FINAL RESULTS ===');
+      console.log('Historical prices object:', historicalPrices);
+      console.log('=== END HISTORICAL DEBUG INFO ===\n');
+      
+      return historicalPrices;
+    }
+
+    function calculatePortfolioPerformance(trades, stockPrices, historicalPrices) {
       let totalCurrentValue = 0;
       let totalInvested = 0;
       const holdings = [];
       
-      // Estimate purchase prices based on market conditions
-      const estimatedPurchasePrices = {
-        'TATAMOTORS': 18.50,    // Estimated price in Nov 2024
-        'YPF': 22.00,           // Estimated price in Nov 2024
-        'TCEHY': 38.75,         // Estimated price in Dec 2024
-        'IBDRY': 36.80,         // Estimated price in Dec 2024
-        'SBLK': 15.25           // Estimated price in Feb 2025
-      };
-      
       for (const trade of trades) {
         const currentPrice = stockPrices[trade.ticker] || 0;
-        const estimatedPurchasePrice = estimatedPurchasePrices[trade.ticker] || currentPrice;
+        const historicalPriceKey = `${trade.ticker}_${trade.purchaseDate}`;
+        const purchasePrice = historicalPrices[historicalPriceKey] || 0;
         const marketValue = trade.shares * currentPrice;
-        const investedAmount = trade.shares * estimatedPurchasePrice;
+        const investedAmount = trade.shares * purchasePrice;
         const profitLoss = marketValue - investedAmount;
         const returnPct = investedAmount > 0 ? (profitLoss / investedAmount) * 100 : 0;
         
@@ -550,7 +699,7 @@
           company: trade.company,
           shares: trade.shares,
           purchaseDate: trade.purchaseDate,
-          purchasePrice: estimatedPurchasePrice,
+          purchasePrice: purchasePrice,
           currentPrice: currentPrice,
           marketValue: marketValue,
           investedAmount: investedAmount,
@@ -606,6 +755,7 @@
           <td>${holding.company}</td>
           <td>${holding.shares.toLocaleString()}</td>
           <td>${holding.purchaseDate}</td>
+          <td>$${holding.purchasePrice.toFixed(2)}</td>
           <td>$${holding.currentPrice.toFixed(2)}</td>
           <td>$${holding.marketValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
           <td class="${holding.profitLoss >= 0 ? 'positive' : 'negative'}">$${holding.profitLoss.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
