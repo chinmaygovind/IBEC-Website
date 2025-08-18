@@ -23,12 +23,7 @@ document.write(`
     <nav id="nav">
         <ul>
             <li><a href="index.html">Home</a></li>
-            <li>
-                <a href="committees.html">Committees</a>
-                <ul>
-                    <li><a href="committees.html#nac">Regional Committees</a></li>
-                    <li><a href="committees.html#coc">Corporate Outreach</a></li>
-                </ul>
+            <li><a href="committees.html">Committees</a>
             </li>
             <li><a href="events.html">Events</a></li>
             <li><a href="learn.html">Learn</a></li>
