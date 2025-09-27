@@ -24,7 +24,13 @@ document.write(`
             <li><a href="committees.html">Committees</a>
             </li>
             <li><a href="events.html">Events</a></li>
-            <li><a href="learn.html">Learn</a></li>
+               <li class="dropdown">
+                   <a href="#">Learn</a>
+                   <ul>
+                       <li><a href="wharton_survival.html">How to Survive Wharton</a></li>
+                       <li><a href="podcast.html">Podcast</a></li>
+                   </ul>
+               </li>
             <li><a href="portfolio.html">Portfolio</a></li>
             <li><a href="contact.html">Contact Us</a></li>
         </ul>
