@@ -341,513 +341,534 @@
     let portfolioChart = null;
     const INITIAL_CAPITAL = 100000;
 
-    // Currency conversion function
-    async function convertToUSD(amount, fromCurrency) {
-      if (fromCurrency === 'USD') {
-        return amount; // Already in USD
-      }
-      
-      try {
-        console.log(`Converting ${amount} ${fromCurrency} to USD`);
-        
-        // Try multiple currency conversion APIs
-        const apis = [
-          `https://api.exchangerate-api.com/v4/latest/${fromCurrency}`,
-          `https://api.fxapi.com/v1/latest?base=${fromCurrency}&symbols=USD`,
-          `https://api.currencyapi.com/v3/latest?apikey=YOUR_API_KEY&base_currency=${fromCurrency}&currencies=USD`
-        ];
-        
-        for (const apiUrl of apis) {
-          try {
-            // Skip APIs that require API keys for this demo
-            if (apiUrl.includes('YOUR_API_KEY')) continue;
-            
-            const response = await fetch(apiUrl);
-            if (response.ok) {
-              const data = await response.json();
-              let exchangeRate = null;
-              
-              // Handle different API response formats
-              if (data.rates && data.rates.USD) {
-                exchangeRate = data.rates.USD;
-              } else if (data.data && data.data.USD && data.data.USD.value) {
-                exchangeRate = data.data.USD.value;
-              }
-              
-              if (exchangeRate) {
-                const convertedAmount = amount * exchangeRate;
-                console.log(`✅ Converted ${amount} ${fromCurrency} to $${convertedAmount.toFixed(2)} USD (rate: ${exchangeRate})`);
-                return convertedAmount;
-              }
-            }
-          } catch (error) {
-            console.log(`Currency API failed: ${error.message}`);
-            continue;
-          }
-        }
-        
-        // No fallback rates - throw error if conversion fails
-        throw new Error(`Unable to convert ${fromCurrency} to USD - all currency APIs failed`);
-        
-      } catch (error) {
-        console.error(`Currency conversion failed for ${fromCurrency}:`, error);
-        throw new Error(`Currency conversion failed: ${error.message}`);
+    // ===== FX caching for realtime (summary cards/table) =====
+    const FX_CACHE = new Map();
+    const FX_TTL_MS = 6 * 60 * 60 * 1000; // 6h
+
+    // Unified FX with proxies + fallbacks
+async function getFxRateToUSD(fromCurrency){
+  if(!fromCurrency || fromCurrency === 'USD') return 1;
+
+  const cached = FX_CACHE.get(fromCurrency);
+  if(cached && (Date.now()-cached.ts) < FX_TTL_MS) return cached.rate;
+
+  const proxies = [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url='
+  ];
+
+  // Helper to try a list of URLs (with proxies) until one returns usable JSON
+  const tryUrls = async (urls, pick) => {
+    let lastErr = null;
+    for(const raw of urls){
+      for(const p of proxies){
+        try{
+          const r = await fetch(p + encodeURIComponent(raw));
+          if(!r.ok) throw new Error(`HTTP ${r.status}`);
+          const data = await r.json();
+          const rate = pick(data);
+          if(rate && isFinite(rate)) return Number(rate);
+        }catch(e){ lastErr = e; }
       }
     }
+    if(lastErr) throw lastErr;
+    return null;
+  };
 
-    async function loadPortfolioData() {
-      try {
-        // Load trades from CSV
+  // 1) exchangerate.host direct (base=from → USD), with inversion fallback (base=USD → from)
+  try{
+    // base=from, symbols=USD
+    const rate1 = await tryUrls(
+      [`https://api.exchangerate.host/latest?base=${encodeURIComponent(fromCurrency)}&symbols=USD`],
+      data => data?.rates?.USD
+    );
+    if(rate1) {
+      FX_CACHE.set(fromCurrency, {rate: rate1, ts: Date.now()});
+      return rate1;
+    }
+
+    // inversion: base=USD, symbols=from
+    const inv = await tryUrls(
+      [`https://api.exchangerate.host/latest?base=USD&symbols=${encodeURIComponent(fromCurrency)}`],
+      data => data?.rates?.[fromCurrency]
+    );
+    if(inv){
+      const rate = 1 / Number(inv);
+      FX_CACHE.set(fromCurrency, {rate, ts: Date.now()});
+      return rate;
+    }
+  }catch(_e){ /* fall through to other providers */ }
+
+  // 2) open.er-api.com
+  try{
+    const rate2 = await tryUrls(
+      [`https://open.er-api.com/v6/latest/${encodeURIComponent(fromCurrency)}`],
+      data => data?.rates?.USD
+    );
+    if(rate2){
+      FX_CACHE.set(fromCurrency, {rate: rate2, ts: Date.now()});
+      return rate2;
+    }
+  }catch(_e){}
+
+  // 3) CDN currency API (@fawazahmed0) — keys are lowercase codes, value is { <from>: { usd: <rate> } }
+  try{
+    const lc = fromCurrency.toLowerCase();
+    const rate3 = await tryUrls(
+      [`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${lc}.json`],
+      data => data?.[lc]?.usd
+    );
+    if(rate3){
+      FX_CACHE.set(fromCurrency, {rate: rate3, ts: Date.now()});
+      return rate3;
+    }
+  }catch(_e){}
+
+  throw new Error(`FX rate unavailable for ${fromCurrency}`);
+}
+
+// Purchase-date FX using exchangerate.host timeseries (+proxies, nearest<=date fallback)
+async function getFxRateOnDateToUSD(fromCurrency, ymd){
+  if(!fromCurrency || fromCurrency === 'USD') return 1;
+
+  const proxies = ['https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+  let lastErr = null;
+
+  // Try exact date, else walk back up to 7 days (weekends/holidays)
+  const backDates = [];
+  {
+    const base = new Date(ymd+'T00:00:00Z');
+    for(let i=0;i<=7;i++){
+      const d = new Date(base); d.setUTCDate(d.getUTCDate()-i);
+      backDates.push(d.toISOString().slice(0,10));
+    }
+  }
+
+  for(const dateStr of backDates){
+    for(const p of proxies){
+      try{
+        const url = p + encodeURIComponent(
+          `https://api.exchangerate.host/${dateStr}?base=${encodeURIComponent(fromCurrency)}&symbols=USD`
+        );
+        const r = await fetch(url);
+        if(!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        const rate = data?.rates?.USD;
+        if(rate && isFinite(rate)) return Number(rate);
+      }catch(e){ lastErr = e; }
+    }
+  }
+  throw new Error(`FX (on ${ymd}) unavailable for ${fromCurrency}: ${lastErr?.message||'unknown'}`);
+}
+
+
+
+    async function convertToUSD(amount, fromCurrency){
+      if(fromCurrency==='USD') return amount;
+      const rate = await getFxRateToUSD(fromCurrency);
+      return amount * rate;
+    }
+
+    async function loadPortfolioData(){
+      try{
         const trades = await loadTradesFromCSV();
-        console.log('Loaded trades:', trades);
-        
-        // Get current stock prices
+
+        // Filter out future-dated trades everywhere
+        const todayYMD = ymd(new Date());
+        const activeTrades = trades.filter(t => t.purchaseDate <= todayYMD);
+
         document.getElementById('lastUpdated').textContent = 'Fetching real-time prices...';
-        const stockPrices = await fetchStockPrices(trades);
-        console.log('Stock prices:', stockPrices);
-        
-        // Get historical purchase prices
+        const stockPrices = await fetchStockPrices(activeTrades);
+
         document.getElementById('lastUpdated').textContent = 'Fetching historical purchase prices...';
-        const historicalPrices = await fetchHistoricalPrices(trades);
-        console.log('Historical prices:', historicalPrices);
-        
-        // Update timestamp
-        const now = new Date();
-        document.getElementById('lastUpdated').textContent = `Prices updated: ${now.toLocaleString()}`;
-        
-        // Calculate portfolio performance
-        const portfolioData = calculatePortfolioPerformance(trades, stockPrices, historicalPrices);
-        console.log('Portfolio data:', portfolioData);
-        
-        // Update UI
+        const historicalPrices = await fetchHistoricalPrices(activeTrades);
+
+        document.getElementById('lastUpdated').textContent = `Prices updated: ${new Date().toLocaleString()}`;
+
+        const portfolioData = calculatePortfolioPerformance(activeTrades, stockPrices, historicalPrices);
+
         updateSummaryCards(portfolioData);
         updateHoldingsTable(portfolioData.holdings);
-        createPortfolioChart(portfolioData);
-        
-        // Show content
-        document.getElementById('loadingMessage').style.display = 'none';
-        document.getElementById('portfolioContent').style.display = 'block';
-        
-      } catch (error) {
-        console.error('Error loading portfolio:', error);
-        document.getElementById('loadingMessage').style.display = 'none';
-        document.getElementById('errorMessage').style.display = 'block';
-        document.getElementById('errorMessage').textContent = `Error loading portfolio: ${error.message}`;
+        // --- uses corrected method below ---
+        createPortfolioChart(portfolioData, activeTrades);
+
+        document.getElementById('loadingMessage').style.display='none';
+        document.getElementById('portfolioContent').style.display='block';
+      }catch(err){
+        console.error(err);
+        document.getElementById('loadingMessage').style.display='none';
+        const el = document.getElementById('errorMessage');
+        el.style.display='block';
+        el.textContent = `Error loading portfolio: ${err.message}`;
       }
     }
 
-    async function loadTradesFromCSV() {
-      const response = await fetch('trades.csv');
+    async function loadTradesFromCSV(){
+      const response = await fetch('trades.csv?cb=' + Date.now(), { cache: 'no-store' });
       const csvText = await response.text();
       const lines = csvText.trim().split('\n');
-      const trades = [];
-      
-      for (let i = 1; i < lines.length; i++) {
-        const [ticker, shares, purchaseDate] = lines[i].split(',');
+
+      const toYMD = (str)=>{
+        const s = String(str||'').trim().replace(/\//g,'-');
+        const [y,m,d] = s.split('-').map(x=>parseInt(x,10));
+        if(!y || !m || !d) { return ymd(new Date()); } // fallback to today if malformed
+        const dt = new Date(Date.UTC(y, m-1, d)); // UTC
+        const mm = String(dt.getUTCMonth()+1).padStart(2,'0');
+        const dd = String(dt.getUTCDate()).padStart(2,'0');
+        return `${dt.getUTCFullYear()}-${mm}-${dd}`;
+      };
+
+      const trades=[];
+      for(let i=1;i<lines.length;i++){
+        const line = lines[i];
+        if(!line || !line.trim()) continue;
+        const parts = line.split(',');
+        if(parts.length < 3) continue;
+        const [tickerRaw, sharesRaw, purchaseDate] = parts;
+        const ticker = (tickerRaw||'').trim();
+        const shares = parseInt((sharesRaw||'').trim(),10);
+        if(!ticker || !Number.isFinite(shares) || shares<=0) continue;
         trades.push({
-          company: ticker.trim(),  // Using ticker as company name for display
-          ticker: ticker.trim(),   // Ticker for API calls
-          shares: parseInt(shares.trim()),
-          purchaseDate: purchaseDate.trim()
+          company: ticker,
+          ticker,
+          shares,
+          purchaseDate: toYMD(purchaseDate)
         });
       }
-      
       return trades;
     }
 
-    async function fetchStockPrices(trades) {
+    // --- Realtime prices for summary/table ---
+    async function fetchStockPrices(trades){
       const prices = {};
-      const uniqueTickers = [...new Set(trades.map(trade => trade.ticker).filter(ticker => ticker))];
-      
-      console.log('=== STOCK PRICE FETCHING DEBUG INFO ===');
-      console.log('Unique tickers to fetch:', uniqueTickers);
-      console.log('Total API calls needed:', uniqueTickers.length);
-      
-      try {
-        // Using Yahoo Finance API via YH Finance API (free, no auth required)
-        for (let i = 0; i < uniqueTickers.length; i++) {
-          const ticker = uniqueTickers[i];
-          console.log(`\n--- Fetching ${i + 1}/${uniqueTickers.length}: ${ticker} ---`);
-          
-          try {
-            // Try multiple CORS proxies for better reliability
-            const proxies = [
-              'https://corsproxy.io/?',
-              'https://api.allorigins.win/raw?url=',
-              'https://cors-anywhere.herokuapp.com/'
-            ];
-            
-            let success = false;
-            let lastError = null;
-            
-            for (const proxyUrl of proxies) {
-              try {
-                const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`;
-                const fullUrl = proxyUrl + encodeURIComponent(yahooUrl);
-                
-                console.log(`Trying proxy: ${proxyUrl}`);
-                console.log(`Yahoo Finance URL: ${yahooUrl}`);
-                console.log(`Full request URL: ${fullUrl}`);
-                
-                const startTime = Date.now();
-                console.log(`Making API request at: ${new Date().toISOString()}`);
-                
-                const response = await fetch(fullUrl);
-                const endTime = Date.now();
-                const responseTime = endTime - startTime;
-                
-                console.log(`Response received in ${responseTime}ms`);
-                console.log(`Response status: ${response.status} ${response.statusText}`);
-                
-                if (response.ok) {
-                  const rawData = await response.text();
-                  console.log(`Raw response length: ${rawData.length} characters`);
-                  console.log(`Response:`, rawData);
-                  
-                  let data;
-                  try {
-                    data = JSON.parse(rawData);
-                    console.log(`JSON parsed successfully`);
-                    console.log(`Response structure:`, {
-                      hasChart: !!data.chart,
-                      hasResult: !!data.chart?.result,
-                      resultLength: data.chart?.result?.length,
-                      hasMeta: !!data.chart?.result?.[0]?.meta,
-                      hasRegularMarketPrice: !!data.chart?.result?.[0]?.meta?.regularMarketPrice
-                    });
-                  } catch (parseError) {
-                    console.error(`JSON parsing failed:`, parseError);
-                    throw new Error(`Invalid JSON response for ${ticker}`);
-                  }
-                  
-                  if (data.chart?.result?.[0]?.meta?.regularMarketPrice) {
-                    const price = data.chart.result[0].meta.regularMarketPrice;
-                    const meta = data.chart.result[0].meta;
-                    const currency = meta.currency || 'USD';
-                    
-                    // Convert price to USD if necessary
-                    const priceInUSD = await convertToUSD(price, currency);
-                    prices[ticker] = priceInUSD;
-                    
-                    console.log(`✅ SUCCESS: ${ticker} = ${price} ${currency} → $${priceInUSD.toFixed(2)} USD`);
-                    console.log(`Additional info:`, {
-                      originalPrice: price,
-                      currency: currency,
-                      convertedPriceUSD: priceInUSD,
-                      exchangeName: meta.exchangeName,
-                      marketState: meta.marketState,
-                      previousClose: meta.previousClose,
-                      regularMarketTime: new Date(meta.regularMarketTime * 1000).toISOString()
-                    });
-                    success = true;
-                    break; // Exit the proxy loop on success
-                  } else {
-                    throw new Error(`No price data found in response for ${ticker}`);
-                  }
-                } else {
-                  throw new Error(`API request failed: ${response.status}`);
-                }
-              } catch (proxyError) {
-                console.log(`❌ Proxy ${proxyUrl} failed:`, proxyError.message);
-                lastError = proxyError;
-                continue; // Try next proxy
-              }
-            }
-            
-            if (!success) {
-              throw lastError || new Error(`All proxies failed for ${ticker}`);
-            }
-            
-            // Add small delay to avoid rate limiting
-            if (i < uniqueTickers.length - 1) {
-              console.log(`Waiting 200ms before next request...`);
-              await new Promise(resolve => setTimeout(resolve, 200));
-            }
-            
-          } catch (error) {
-            console.error(`❌ Failed to fetch price for ${ticker}:`, error);
-            console.error(`Error details:`, {
-              name: error.name,
-              message: error.message,
-              stack: error.stack
-            });
-            
-            // No fallback - let it fail
-            throw new Error(`Failed to fetch price for ${ticker}: ${error.message}`);
-          }
+      const uniqueTickers = [...new Set(
+        trades.map(t=>t.ticker).filter(t=>t && !t.startsWith('^'))
+      )];
+
+      const proxies = [
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url='
+      ];
+
+      for(let i=0;i<uniqueTickers.length;i++){
+        const ticker = uniqueTickers[i];
+        let ok=false, lastErr=null;
+
+        for(const p of proxies){
+          try{
+            const url = p + encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`);
+            const r = await fetch(url);
+            if(!r.ok) throw new Error(`HTTP ${r.status}`);
+            const data = JSON.parse(await r.text());
+            const meta = data?.chart?.result?.[0]?.meta;
+            const price = meta?.regularMarketPrice;
+            const currency = meta?.currency || 'USD';
+            if(price==null) throw new Error('No price in response');
+            prices[ticker] = await convertToUSD(price, currency);
+            ok=true; break;
+          }catch(e){ lastErr=e; }
         }
-      } catch (error) {
-        console.error('❌ Critical error in fetchStockPrices:', error);
-        // No fallback - let it fail completely
-        throw new Error(`Critical error fetching stock prices: ${error.message}`);
+        if(!ok) throw new Error(`Failed realtime for ${ticker}: ${lastErr?.message||'unknown'}`);
+        if(i<uniqueTickers.length-1) await new Promise(r=>setTimeout(r,200));
       }
-      
-      console.log('\n=== FINAL RESULTS ===');
-      console.log('Final prices object:', prices);
-      console.log('Successfully fetched prices for:', Object.keys(prices));
-      console.log('Missing prices for:', uniqueTickers.filter(ticker => !prices[ticker]));
-      console.log('=== END DEBUG INFO ===\n');
-      
       return prices;
     }
 
-    async function fetchHistoricalPrices(trades) {
-      const historicalPrices = {};
-      
-      console.log('=== HISTORICAL PRICE FETCHING DEBUG INFO ===');
-      
-      try {
-        for (const trade of trades) {
-          const ticker = trade.ticker;
-          const purchaseDate = trade.purchaseDate;
-          
-          console.log(`\n--- Fetching historical price for ${ticker} on ${purchaseDate} ---`);
-          
-          try {
-            // Convert date to timestamp for Yahoo Finance API
-            const date = new Date(purchaseDate);
-            const timestamp = Math.floor(date.getTime() / 1000);
-            const nextDay = new Date(date);
-            nextDay.setDate(date.getDate() + 1);
-            const endTimestamp = Math.floor(nextDay.getTime() / 1000);
-            
-            console.log(`Date: ${purchaseDate}, Timestamp: ${timestamp}, End: ${endTimestamp}`);
-            
-            // Try multiple CORS proxies for better reliability
-            const proxies = [
-              'https://corsproxy.io/?',
-              'https://api.allorigins.win/raw?url=',
-              'https://cors-anywhere.herokuapp.com/'
-            ];
-            
-            let success = false;
-            let lastError = null;
-            
-            for (const proxyUrl of proxies) {
-              try {
-                const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${timestamp}&period2=${endTimestamp}&interval=1d`;
-                const fullUrl = proxyUrl + encodeURIComponent(yahooUrl);
-                
-                console.log(`Trying historical proxy: ${proxyUrl}`);
-                console.log(`Historical Yahoo Finance URL: ${yahooUrl}`);
-                
-                const response = await fetch(fullUrl);
-                
-                if (response.ok) {
-                  const rawData = await response.text();
-                  const data = JSON.parse(rawData);
-                  
-                  if (data.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.[0]) {
-                    const closePrice = data.chart.result[0].indicators.quote[0].close[0];
-                    const meta = data.chart.result[0].meta;
-                    const currency = meta?.currency || 'USD';
-                    
-                    // Convert historical price to USD if necessary
-                    const closePriceInUSD = await convertToUSD(closePrice, currency);
-                    historicalPrices[`${ticker}_${purchaseDate}`] = closePriceInUSD;
-                    
-                    console.log(`✅ SUCCESS: ${ticker} on ${purchaseDate} = ${closePrice} ${currency} → $${closePriceInUSD.toFixed(2)} USD`);
-                    success = true;
-                    break; // Exit proxy loop on success
-                  } else {
-                    throw new Error(`No historical data found for ${ticker} on ${purchaseDate}`);
-                  }
-                } else {
-                  throw new Error(`API request failed: ${response.status}`);
-                }
-              } catch (proxyError) {
-                console.log(`❌ Historical proxy ${proxyUrl} failed:`, proxyError.message);
-                lastError = proxyError;
-                continue; // Try next proxy
-              }
-            }
-            
-            if (!success) {
-              throw lastError || new Error(`All proxies failed for historical data: ${ticker} on ${purchaseDate}`);
-            }
-            
-            // Add delay to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-          } catch (error) {
-            console.error(`❌ Failed to fetch historical price for ${ticker} on ${purchaseDate}:`, error);
-            throw new Error(`Failed to fetch historical price for ${ticker} on ${purchaseDate}: ${error.message}`);
-          }
+    // --- Historical purchase prices (fallback for table) ---
+    async function fetchHistoricalPrices(trades){
+      const out = {};
+      const proxies = [
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url='
+      ];
+
+      const oneDay = async (ticker, ymdStr)=>{
+        let lastErr=null;
+        const baseDate = new Date(ymdStr + 'T00:00:00Z');
+        const period1 = Math.floor(baseDate.getTime()/1000);
+        const period2 = period1 + 86400*2;
+
+        for(const p of proxies){
+          try{
+            const url = p + encodeURIComponent(
+              `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d`
+            );
+            const r = await fetch(url);
+            if(!r.ok) { lastErr = new Error(`HTTP ${r.status}`); continue; }
+            const data = JSON.parse(await r.text());
+            const res = data?.chart?.result?.[0];
+            const close = res?.indicators?.quote?.[0]?.close?.[0];
+            const currency = res?.meta?.currency || 'USD';
+            if(close==null) return null;
+            return await convertToUSD(close, currency);
+          }catch(e){ lastErr=e; }
         }
-      } catch (error) {
-        console.error('❌ Critical error in fetchHistoricalPrices:', error);
+        console.warn(`Historical attempt failed for ${ticker} on ${ymdStr}: ${lastErr?.message||'unknown'}`);
+        return null;
+      };
+
+      // skip indices here too
+      const cleanTrades = trades.filter(t => !t.ticker.startsWith('^'));
+
+      for(const t of cleanTrades){
+        const ticker = t.ticker;
+        const buy = t.purchaseDate;
+
+        let found=null;
+        for(let d=0; d<=10; d++){
+          const dt = new Date(buy);
+          dt.setUTCDate(dt.getUTCDate()+d);
+          const y = dt.getUTCFullYear();
+          const m = String(dt.getUTCMonth()+1).padStart(2,'0');
+          const day = String(dt.getUTCDate()).padStart(2,'0');
+          const tryYMD = `${y}-${m}-${day}`;
+          found = await oneDay(ticker, tryYMD);
+          if(found!=null){ out[`${ticker}_${t.purchaseDate}`] = found; break; }
+          await new Promise(r=>setTimeout(r,150));
+        }
+        if(found==null){
+          console.warn(`No historical close found for ${ticker} around ${buy} (skipped)`);
+        }
       }
-      
-      console.log('\n=== HISTORICAL PRICES FINAL RESULTS ===');
-      console.log('Historical prices object:', historicalPrices);
-      console.log('=== END HISTORICAL DEBUG INFO ===\n');
-      
-      return historicalPrices;
+      return out;
     }
 
-    function calculatePortfolioPerformance(trades, stockPrices, historicalPrices) {
-      let totalCurrentValue = 0;
-      let totalInvested = 0;
-      const holdings = [];
-      
-      for (const trade of trades) {
+    function calculatePortfolioPerformance(trades, stockPrices, historicalPrices){
+      let totalCurrentValue=0, totalInvested=0;
+      const holdings=[];
+
+      for(const trade of trades){
         const currentPrice = stockPrices[trade.ticker] || 0;
-        const historicalPriceKey = `${trade.ticker}_${trade.purchaseDate}`;
-        const purchasePrice = historicalPrices[historicalPriceKey] || 0;
-        const marketValue = trade.shares * currentPrice;
-        const investedAmount = trade.shares * purchasePrice;
-        const profitLoss = marketValue - investedAmount;
-        const returnPct = investedAmount > 0 ? (profitLoss / investedAmount) * 100 : 0;
-        
+        const purchasePrice = historicalPrices[`${trade.ticker}_${trade.purchaseDate}`] || 0;
+        const marketValue  = trade.shares * currentPrice;
+        const investedAmt  = trade.shares * purchasePrice;
+        const pl           = marketValue - investedAmt;
+        const retPct       = investedAmt>0 ? (pl/investedAmt)*100 : 0;
+
         holdings.push({
-          company: trade.company,
-          shares: trade.shares,
-          purchaseDate: trade.purchaseDate,
-          purchasePrice: purchasePrice,
-          currentPrice: currentPrice,
-          marketValue: marketValue,
-          investedAmount: investedAmount,
-          profitLoss: profitLoss,
-          returnPct: returnPct
+          company: trade.company, shares: trade.shares, purchaseDate: trade.purchaseDate,
+          purchasePrice, currentPrice, marketValue, investedAmount: investedAmt,
+          profitLoss: pl, returnPct: retPct
         });
-        
+
         totalCurrentValue += marketValue;
-        totalInvested += investedAmount;
+        totalInvested += investedAmt;
       }
-      
+
       const cashRemaining = INITIAL_CAPITAL - totalInvested;
       const totalPortfolioValue = totalCurrentValue + cashRemaining;
-      const totalReturn = ((totalPortfolioValue - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100;
+      const totalReturn = ((totalPortfolioValue - INITIAL_CAPITAL)/INITIAL_CAPITAL)*100;
       const totalProfitLoss = totalPortfolioValue - INITIAL_CAPITAL;
-      
-      return {
-        holdings: holdings,
-        totalCurrentValue: totalCurrentValue,
-        totalInvested: totalInvested,
-        cashRemaining: cashRemaining,
-        totalPortfolioValue: totalPortfolioValue,
-        totalReturn: totalReturn,
-        totalProfitLoss: totalProfitLoss
-      };
+
+      return { holdings, totalCurrentValue, totalInvested, cashRemaining, totalPortfolioValue, totalReturn, totalProfitLoss };
     }
 
-    function updateSummaryCards(portfolioData) {
-      document.getElementById('currentValue').textContent = `$${portfolioData.totalPortfolioValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-      document.getElementById('totalReturn').textContent = `${portfolioData.totalReturn.toFixed(2)}%`;
-      document.getElementById('profitLoss').textContent = `$${portfolioData.totalProfitLoss.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-      
-      // Color coding for return and P&L
-      const returnElement = document.getElementById('totalReturn');
-      const plElement = document.getElementById('profitLoss');
-      
-      if (portfolioData.totalReturn >= 0) {
-        returnElement.style.color = '#28a745';
-        plElement.style.color = '#28a745';
-      } else {
-        returnElement.style.color = '#dc3545';
-        plElement.style.color = '#dc3545';
-      }
+    function updateSummaryCards(p){
+      document.getElementById('currentValue').textContent = `$${p.totalPortfolioValue.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+      document.getElementById('totalReturn').textContent = `${p.totalReturn.toFixed(2)}%`;
+      document.getElementById('profitLoss').textContent  = `$${p.totalProfitLoss.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+
+      const r = document.getElementById('totalReturn');
+      const pl = document.getElementById('profitLoss');
+      if(p.totalReturn>=0){ r.style.color='#28a745'; pl.style.color='#28a745'; }
+      else { r.style.color='#dc3545'; pl.style.color='#dc3545'; }
     }
 
-    function updateHoldingsTable(holdings) {
+    function updateHoldingsTable(holdings){
       const tbody = document.getElementById('holdingsTableBody');
-      tbody.innerHTML = '';
-      
-      holdings.forEach(holding => {
-        const row = tbody.insertRow();
-        row.innerHTML = `
-          <td>${holding.company}</td>
-          <td>${holding.shares.toLocaleString()}</td>
-          <td>${holding.purchaseDate}</td>
-          <td>$${holding.purchasePrice.toFixed(2)}</td>
-          <td>$${holding.currentPrice.toFixed(2)}</td>
-          <td>$${holding.marketValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
-          <td class="${holding.profitLoss >= 0 ? 'positive' : 'negative'}">$${holding.profitLoss.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
-          <td class="${holding.returnPct >= 0 ? 'positive' : 'negative'}">${holding.returnPct.toFixed(2)}%</td>
-        `;
+      tbody.innerHTML='';
+      holdings.forEach(h=>{
+        const tr = tbody.insertRow();
+        tr.innerHTML = `
+          <td>${h.company}</td>
+          <td>${h.shares.toLocaleString()}</td>
+          <td>${h.purchaseDate}</td>
+          <td>$${h.purchasePrice.toFixed(2)}</td>
+          <td>$${h.currentPrice.toFixed(2)}</td>
+          <td>$${h.marketValue.toLocaleString('en-US',{maximumFractionDigits:0})}</td>
+          <td class="${h.profitLoss>=0?'positive':'negative'}">$${h.profitLoss.toLocaleString('en-US',{maximumFractionDigits:0})}</td>
+          <td class="${h.returnPct>=0?'positive':'negative'}">${h.returnPct.toFixed(2)}%</td>`;
       });
     }
 
-    function createPortfolioChart(portfolioData) {
+    const ALLOW_MARGIN = false;
+
+    function ymd(d){ return d.toISOString().slice(0,10); }
+    function makeCalendar(startYMD, endYMD){
+      const days=[]; let d=new Date(startYMD+'T00:00:00Z'); const end=new Date(endYMD+'T00:00:00Z');
+      while(d<=end){ days.push(ymd(d)); d.setUTCDate(d.getUTCDate()+1); }
+      return days;
+    }
+
+    const FX_SERIES = {}; // { "EUR": { "YYYY-MM-DD": rateToUSD, ... } }
+    async function fetchFxTimeseries(base, startYMD, endYMD){
+      if(base==='USD') return;
+      if(FX_SERIES[base]) return;
+      const proxies=['https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+      let lastErr=null;
+      for(const p of proxies){
+        try{
+          const url = p + encodeURIComponent(
+            `https://api.exchangerate.host/timeseries?base=${base}&symbols=USD&start_date=${startYMD}&end_date=${endYMD}`
+          );
+          const r = await fetch(url);
+          if(!r.ok) throw new Error(`HTTP ${r.status}`);
+          const data = await r.json();
+          const rates = {};
+          for(const [d,obj] of Object.entries(data?.rates||{})){ rates[d] = obj?.USD ?? null; }
+          FX_SERIES[base] = rates;
+          return;
+        }catch(e){ lastErr=e; }
+      }
+      throw new Error(`FX timeseries failed for ${base}: ${lastErr?.message||'unknown'}`);
+    }
+
+    // future-trade safe: return null if not found
+    function firstOnOrAfter(sortedDates, target){
+      for(const d of sortedDates){ if(d>=target) return d; }
+      return null;
+    }
+
+    function mapSeriesToCalendar(series, calendar){
+      const out=[]; let last=null;
+      for(const d of calendar){ if(series[d]!=null) last=series[d]; out.push(last); }
+      return out;
+    }
+
+    async function createPortfolioChart(portfolioData, tradesArg){
       const ctx = document.getElementById('portfolioChart').getContext('2d');
-      
-      if (portfolioChart) {
-        portfolioChart.destroy();
+      if(portfolioChart) portfolioChart.destroy();
+
+      const trades = Array.isArray(tradesArg) ? tradesArg : (window.tradesData||[]);
+      if(!trades.length) return;
+
+      const normalizedTrades = trades.map(t=>({
+        ...t, purchaseDate: t.purchaseDate.trim().replace(/\//g,'-')
+      }));
+
+      const startMillis = Math.min(...normalizedTrades.map(t=>new Date(t.purchaseDate).getTime()));
+      const startDate = new Date(startMillis);
+      const endDate = new Date();
+      const period1 = Math.floor(startDate.getTime()/1000);
+      const period2 = Math.floor(endDate.getTime()/1000);
+
+      // Pull local-currency series per ticker
+      const tickers = [...new Set(normalizedTrades.map(t=>t.ticker).filter(t=>t && !t.startsWith('^')))];
+      const proxies = ['https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+
+      async function fetchLocalSeries(ticker){
+        let lastErr=null;
+        for(const p of proxies){
+          try{
+            const url = p + encodeURIComponent(
+              `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d`
+            );
+            const r = await fetch(url);
+            if(!r.ok) throw new Error(`HTTP ${r.status}`);
+            const data = await r.json();
+            const res = data?.chart?.result?.[0];
+            const currency = res?.meta?.currency || 'USD';
+            const ts = res?.timestamp || [];
+            const adj = res?.indicators?.adjclose?.[0]?.adjclose || [];
+            const close = res?.indicators?.quote?.[0]?.close || [];
+            const toY = s => { const d=new Date(s*1000); return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`; };
+            const seriesLocal = {};
+            for(let i=0;i<ts.length;i++){ const px=(adj[i] ?? close[i]); if(px!=null) seriesLocal[toY(ts[i])] = px; }
+            return { currency, seriesLocal };
+          }catch(e){ lastErr=e; }
+        }
+        throw new Error(`History failed for ${ticker}: ${lastErr?.message||'unknown'}`);
       }
-      
-      // Create sample timeline data (mock historical performance)
-      const dates = [];
-      const values = [];
-      const startDate = new Date('2024-11-01');
-      const currentDate = new Date();
-      const totalDays = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
-      
-      for (let i = 0; i <= totalDays; i += 7) { // Weekly data points
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + i);
-        dates.push(date.toLocaleDateString());
-        
-        // Simulate portfolio growth/decline over time
-        const progress = i / totalDays;
-        const finalValue = portfolioData.totalPortfolioValue;
-        const value = INITIAL_CAPITAL + (finalValue - INITIAL_CAPITAL) * progress;
-        // Add some random fluctuation
-        const fluctuation = (Math.random() - 0.5) * 2000;
-        values.push(Math.max(0, value + fluctuation));
+
+      const perTickerRaw = {};
+      for(let i=0;i<tickers.length;i+=4){
+        const batch = tickers.slice(i,i+4);
+        const results = await Promise.allSettled(batch.map(fetchLocalSeries));
+        results.forEach((r,idx)=>{ if(r.status==='fulfilled') perTickerRaw[batch[idx]] = r.value; });
+        await new Promise(res=>setTimeout(res,250));
       }
-      
-      portfolioChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: dates,
-          datasets: [{
-            label: 'Portfolio Value',
-            data: values,
-            borderColor: '#007bff',
-            backgroundColor: 'rgba(0, 123, 255, 0.1)',
-            borderWidth: 2,
-            tension: 0.1,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: 'Date'
-              }
-            },
-            y: {
-              title: {
-                display: true,
-                text: 'Portfolio Value ($)'
-              },
-              beginAtZero: false
-            }
-          },
-          plugins: {
-            title: {
-              display: true,
-              text: 'Portfolio Performance Over Time',
-              font: {
-                size: 16
-              }
-            },
-            legend: {
-              display: true
-            }
+
+      // Master calendar + FX timeseries for non-USD
+      const cal = makeCalendar(ymd(new Date(startDate.getTime())), ymd(new Date(endDate.getTime())));
+      const neededCurrencies = [...new Set(Object.values(perTickerRaw).map(o=>o.currency).filter(c=>c && c!=='USD'))];
+      for(const c of neededCurrencies){ await fetchFxTimeseries(c, cal[0], cal[cal.length-1]); }
+
+      // Convert each ticker series to USD and align to calendar
+      const perTickerUSDCalendar = {};
+      const perTickerDatesSorted = {};
+      for(const [tk, obj] of Object.entries(perTickerRaw)){
+        const { currency, seriesLocal } = obj;
+        const seriesUSD = {};
+        const rawDates = Object.keys(seriesLocal).sort();
+        perTickerDatesSorted[tk] = rawDates;
+        for(const d of rawDates){
+          const fx = (currency==='USD') ? 1 : (FX_SERIES[currency]?.[d] ?? null);
+          if(fx!=null) seriesUSD[d] = seriesLocal[d] * fx;
+        }
+        perTickerUSDCalendar[tk] = mapSeriesToCalendar(seriesUSD, cal);
+      }
+
+      // Invest on the first trading day >= CSV date
+      const investedOn = new Array(cal.length).fill(0);
+      for(const tr of normalizedTrades){
+        const tk = tr.ticker, shares = tr.shares;
+        const tradingDates = perTickerDatesSorted[tk] || [];
+        if(!tradingDates.length) continue;
+        const effDate = firstOnOrAfter(tradingDates, tr.purchaseDate);
+        if(!effDate) continue;                       // <-- future-dated safety
+        const idx = cal.indexOf(effDate);
+        if(idx === -1) continue;
+        const pxUSD = perTickerUSDCalendar[tk][idx];
+        if(pxUSD!=null){ investedOn[idx] += pxUSD * shares; }
+      }
+
+      const investedSoFar=[]; let cum=0;
+      for(let i=0;i<cal.length;i++){ cum += investedOn[i]; investedSoFar.push(cum); }
+
+      const values=[];
+      for(let i=0;i<cal.length;i++){
+        let holdingsUSD = 0;
+        for(const tr of normalizedTrades){
+          const tk = tr.ticker;
+          const tradingDates = perTickerDatesSorted[tk] || [];
+          if(!tradingDates.length) continue;
+          const effDate = firstOnOrAfter(tradingDates, tr.purchaseDate);
+          if(!effDate) continue;                     // <-- future-dated safety
+          const effIdx = cal.indexOf(effDate);
+          if(effIdx !== -1 && i >= effIdx){
+            const pxUSD = perTickerUSDCalendar[tk][i];
+            if(pxUSD!=null) holdingsUSD += pxUSD * tr.shares;
           }
+        }
+        let cash = INITIAL_CAPITAL - investedSoFar[i];
+        if(!ALLOW_MARGIN && cash < 0) cash = 0;
+        values.push(holdingsUSD + cash);
+      }
+
+      // Weekly sampling to keep chart light
+      const sampledDates=[], sampledValues=[];
+      for(let i=0;i<cal.length;i+=7){ sampledDates.push(cal[i]); sampledValues.push(values[i]); }
+      if(sampledDates[sampledDates.length-1]!==cal[cal.length-1]){
+        sampledDates.push(cal[cal.length-1]); sampledValues.push(values[values.length-1]);
+      }
+
+      // Pin final chart point to the card's "Current Value"
+      if (sampledValues.length){
+        sampledValues[sampledValues.length - 1] = portfolioData.totalPortfolioValue;
+      }
+
+      portfolioChart = new Chart(ctx,{
+        type:'line',
+        data:{labels:sampledDates,datasets:[{label:'Portfolio Value',data:sampledValues,borderColor:'#007bff',backgroundColor:'rgba(0,123,255,0.1)',borderWidth:2,tension:0.1,fill:true}]},
+        options:{responsive:true,maintainAspectRatio:false,
+          scales:{x:{title:{display:true,text:'Date'}},y:{title:{display:true,text:'Portfolio Value ($)'}}},
+          plugins:{title:{display:true,text:'Portfolio Performance Over Time',font:{size:16}},legend:{display:true}}
         }
       });
     }
 
-    // Initialize portfolio when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      loadPortfolioData();
-    });
+    document.addEventListener('DOMContentLoaded', ()=>{ loadPortfolioData(); });
+
   </script>
 
   <script src="assets/js/jquery.min.js"></script>
