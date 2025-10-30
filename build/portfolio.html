@@ -305,8 +305,8 @@
                 <tr>
                   <th>Company</th>
                   <th>Shares</th>
-                  <th>Purchase Date</th>
-                  <th>Purchase Price</th>
+                  <th>Initial Purchase Date</th>
+                  <th>Avg Purchase Price</th>
                   <th>Current Price</th>
                   <th>Market Value</th>
                   <th>P&L</th>
@@ -527,7 +527,7 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
         const [tickerRaw, sharesRaw, purchaseDate] = parts;
         const ticker = (tickerRaw||'').trim();
         const shares = parseInt((sharesRaw||'').trim(),10);
-        if(!ticker || !Number.isFinite(shares) || shares<=0) continue;
+        if(!ticker || !Number.isFinite(shares)) continue;
         trades.push({
           company: ticker,
           ticker,
@@ -634,25 +634,58 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
     }
 
     function calculatePortfolioPerformance(trades, stockPrices, historicalPrices){
-      let totalCurrentValue=0, totalInvested=0;
-      const holdings=[];
+      // Aggregate trades by ticker. Support buys (positive shares) and sells (negative shares).
+      const byTicker = {};
+      for(const t of trades){
+        const tk = t.ticker;
+        if(!byTicker[tk]) byTicker[tk] = { company: t.company || tk, trades: [], netShares:0, buyShares:0, buyAmount:0, earliestBuyDate: null };
+        const purchasePrice = historicalPrices[`${t.ticker}_${t.purchaseDate}`] || 0;
+        byTicker[tk].trades.push({ ...t, purchasePrice });
+        byTicker[tk].netShares += Number(t.shares || 0);
+        if(Number(t.shares) > 0){
+          byTicker[tk].buyShares += Number(t.shares);
+          byTicker[tk].buyAmount += Number(t.shares) * Number(purchasePrice);
+          // track earliest buy date (ISO yyyy-mm-dd strings compare lexicographically)
+          const pd = (t.purchaseDate || '').trim();
+          if(pd){
+            if(!byTicker[tk].earliestBuyDate || pd < byTicker[tk].earliestBuyDate) byTicker[tk].earliestBuyDate = pd;
+          }
+        }
+      }
 
-      for(const trade of trades){
-        const currentPrice = stockPrices[trade.ticker] || 0;
-        const purchasePrice = historicalPrices[`${trade.ticker}_${trade.purchaseDate}`] || 0;
-        const marketValue  = trade.shares * currentPrice;
-        const investedAmt  = trade.shares * purchasePrice;
-        const pl           = marketValue - investedAmt;
-        const retPct       = investedAmt>0 ? (pl/investedAmt)*100 : 0;
+      const holdings = [];
+      let totalCurrentValue = 0, totalInvested = 0;
+
+      for(const [tk, obj] of Object.entries(byTicker)){
+        const netShares = obj.netShares;
+        // Exclude positions that are fully closed or zero/negative
+        if(!netShares || netShares <= 0) continue;
+
+        // Compute average purchase price across all buy trades (weighted)
+        let avgPurchasePrice = 0;
+        if(obj.buyShares > 0) avgPurchasePrice = obj.buyAmount / obj.buyShares;
+
+        const currentPrice = stockPrices[tk] || 0;
+        const marketValue = netShares * currentPrice;
+        const investedAmount = avgPurchasePrice * netShares;
+        const profitLoss = marketValue - investedAmount;
+        const returnPct = investedAmount > 0 ? (profitLoss / investedAmount) * 100 : 0;
 
         holdings.push({
-          company: trade.company, shares: trade.shares, purchaseDate: trade.purchaseDate,
-          purchasePrice, currentPrice, marketValue, investedAmount: investedAmt,
-          profitLoss: pl, returnPct: retPct
+          company: obj.company,
+          ticker: tk,
+          shares: netShares,
+          purchasePrice: avgPurchasePrice,
+          initialPurchaseDate: obj.earliestBuyDate || (obj.trades[0] && obj.trades[0].purchaseDate) || '',
+          currentPrice,
+          marketValue,
+          investedAmount,
+          profitLoss,
+          returnPct
         });
 
         totalCurrentValue += marketValue;
-        totalInvested += investedAmt;
+        totalInvested += investedAmount;
       }
 
       const cashRemaining = INITIAL_CAPITAL - totalInvested;
@@ -680,14 +713,14 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
       holdings.forEach(h=>{
         const tr = tbody.insertRow();
         tr.innerHTML = `
-          <td>${h.company}</td>
-          <td>${h.shares.toLocaleString()}</td>
-          <td>${h.purchaseDate}</td>
-          <td>$${h.purchasePrice.toFixed(2)}</td>
-          <td>$${h.currentPrice.toFixed(2)}</td>
-          <td>$${h.marketValue.toLocaleString('en-US',{maximumFractionDigits:0})}</td>
-          <td class="${h.profitLoss>=0?'positive':'negative'}">$${h.profitLoss.toLocaleString('en-US',{maximumFractionDigits:0})}</td>
-          <td class="${h.returnPct>=0?'positive':'negative'}">${h.returnPct.toFixed(2)}%</td>`;
+          <td>${h.company}${h.ticker?(' <small style="color:#666">('+h.ticker+')</small>'):''}</td>
+          <td>${Number(h.shares).toLocaleString()}</td>
+          <td>${h.initialPurchaseDate || ''}</td>
+          <td>$${Number(h.purchasePrice||0).toFixed(2)}</td>
+          <td>$${Number(h.currentPrice||0).toFixed(2)}</td>
+          <td>$${Number(h.marketValue||0).toLocaleString('en-US',{maximumFractionDigits:0})}</td>
+          <td class="${h.profitLoss>=0?'positive':'negative'}">$${Number(h.profitLoss||0).toLocaleString('en-US',{maximumFractionDigits:0})}</td>
+          <td class="${h.returnPct>=0?'positive':'negative'}">${Number(h.returnPct||0).toFixed(2)}%</td>`;
       });
     }
 
