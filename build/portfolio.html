@@ -538,6 +538,10 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
       return trades;
     }
 
+    // --- YOUR FLASK SERVER URL ---
+    // Change this to your Codespace forwarded URL or localhost when running locally
+    const SERVER_URL = 'https://verbose-space-engine-jjgjxrqg7qwqfrq4-5000.app.github.dev';
+
     // --- Realtime prices for summary/table ---
     async function fetchStockPrices(trades){
       const prices = {};
@@ -545,43 +549,27 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
         trades.map(t=>t.ticker).filter(t=>t && !t.startsWith('^'))
       )];
 
-      const proxies = [
-        'https://corsproxy.io/?',
-        'https://api.allorigins.win/raw?url='
-      ];
-
       for(let i=0;i<uniqueTickers.length;i++){
         const ticker = uniqueTickers[i];
-        let ok=false, lastErr=null;
-
-        for(const p of proxies){
-          try{
-            const url = p + encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}`);
-            const r = await fetch(url);
-            if(!r.ok) throw new Error(`HTTP ${r.status}`);
-            const data = JSON.parse(await r.text());
-            const meta = data?.chart?.result?.[0]?.meta;
-            const price = meta?.regularMarketPrice;
-            const currency = meta?.currency || 'USD';
-            if(price==null) throw new Error('No price in response');
-            prices[ticker] = await convertToUSD(price, currency);
-            ok=true; break;
-          }catch(e){ lastErr=e; }
+        try{
+          const response = await fetch(`${SERVER_URL}/price/${ticker}`);
+          if(!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          if(data.price == null) throw new Error('No price in response');
+          prices[ticker] = data.price; // Server already returns USD
+        }catch(e){
+          console.error(`Failed to fetch ${ticker}:`, e);
+          throw new Error(`Failed realtime for ${ticker}: ${e.message}`);
         }
-        if(!ok) throw new Error(`Failed realtime for ${ticker}: ${lastErr?.message||'unknown'}`);
-        if(i<uniqueTickers.length-1) await new Promise(r=>setTimeout(r,200));
+        // Small delay between requests
+        if(i<uniqueTickers.length-1) await new Promise(r=>setTimeout(r,100));
       }
       return prices;
     }
 
-    // --- Historical purchase prices (fallback for table) ---
-async function fetchHistoricalPrices(trades){
+    // --- Historical purchase prices using your Flask server ---
+    async function fetchHistoricalPrices(trades){
       const out = {};
-      const proxies = [
-        'https://corsproxy.io/?',
-        'https://api.allorigins.win/raw?url='
-      ];
-
       const cleanTrades = trades.filter(t => !t.ticker.startsWith('^'));
 
       for(const t of cleanTrades){
@@ -591,55 +579,25 @@ async function fetchHistoricalPrices(trades){
         // Skip if we already have this price
         if(out[`${ticker}_${buyDate}`] !== undefined) continue;
 
-        let foundPrice = null;
-        
-        // 1. Try fetching the specific date range first
-        const startDate = new Date(buyDate);
-        const period1 = Math.floor(startDate.getTime()/1000);
-        
-        // We look forward far enough to catch a listing date if it's a new stock
-        // For normal stocks, this grabs the day. For demerged stocks, it grabs the first trading day.
-        const endDate = new Date(); // Today
-        const period2 = Math.floor(endDate.getTime()/1000);
-
-        for(const p of proxies){
-           try{
-             // Request all data from purchase date until today
-             const url = p + encodeURIComponent(
-               `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d`
-             );
-             const r = await fetch(url);
-             if(!r.ok) continue; 
-             
-             const text = await r.text();
-             if(text.includes('<html') || text.includes('Error')) continue;
-
-             const data = JSON.parse(text);
-             const res = data?.chart?.result?.[0];
-             const quotes = res?.indicators?.quote?.[0]?.close;
-             const currency = res?.meta?.currency || 'USD';
-
-             // THE FIX: Find the first non-null value in the array
-             const firstValidPrice = quotes?.find(price => price != null);
-
-             if(firstValidPrice != null){
-               foundPrice = await convertToUSD(firstValidPrice, currency);
-               break; // Found it, stop trying proxies
-             }
-           } catch(e){ 
-             console.warn(`Proxy fail for ${ticker}:`, e.message);
-           }
-        }
-
-        if(foundPrice !== null){
-          out[`${ticker}_${buyDate}`] = foundPrice;
-        } else {
-          console.warn(`Could not fetch any history for ${ticker}. Defaulting to current price.`);
-          out[`${ticker}_${buyDate}`] = 0; 
+        try{
+          // Use your Flask server's /history/ endpoint
+          const response = await fetch(`${SERVER_URL}/history/${ticker}?start=${buyDate}`);
+          if(!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          
+          if(data.price != null && data.price > 0){
+            out[`${ticker}_${buyDate}`] = data.price;
+          } else {
+            console.warn(`No history for ${ticker} on ${buyDate}, defaulting to 0`);
+            out[`${ticker}_${buyDate}`] = 0;
+          }
+        } catch(e){
+          console.warn(`Failed history for ${ticker}:`, e.message);
+          out[`${ticker}_${buyDate}`] = 0;
         }
         
-        // Tiny pause to be polite to the API
-        await new Promise(r => setTimeout(r, 100)); 
+        // Small delay between requests
+        await new Promise(r => setTimeout(r, 100));
       }
       return out;
     }
