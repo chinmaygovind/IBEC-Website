@@ -575,60 +575,71 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
     }
 
     // --- Historical purchase prices (fallback for table) ---
-    async function fetchHistoricalPrices(trades){
+async function fetchHistoricalPrices(trades){
       const out = {};
       const proxies = [
         'https://corsproxy.io/?',
         'https://api.allorigins.win/raw?url='
       ];
 
-      const oneDay = async (ticker, ymdStr)=>{
-        let lastErr=null;
-        const baseDate = new Date(ymdStr + 'T00:00:00Z');
-        const period1 = Math.floor(baseDate.getTime()/1000);
-        const period2 = period1 + 86400*2;
-
-        for(const p of proxies){
-          try{
-            const url = p + encodeURIComponent(
-              `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d`
-            );
-            const r = await fetch(url);
-            if(!r.ok) { lastErr = new Error(`HTTP ${r.status}`); continue; }
-            const data = JSON.parse(await r.text());
-            const res = data?.chart?.result?.[0];
-            const close = res?.indicators?.quote?.[0]?.close?.[0];
-            const currency = res?.meta?.currency || 'USD';
-            if(close==null) return null;
-            return await convertToUSD(close, currency);
-          }catch(e){ lastErr=e; }
-        }
-        console.warn(`Historical attempt failed for ${ticker} on ${ymdStr}: ${lastErr?.message||'unknown'}`);
-        return null;
-      };
-
-      // skip indices here too
       const cleanTrades = trades.filter(t => !t.ticker.startsWith('^'));
 
       for(const t of cleanTrades){
         const ticker = t.ticker;
-        const buy = t.purchaseDate;
+        const buyDate = t.purchaseDate; // YYYY-MM-DD
+        
+        // Skip if we already have this price
+        if(out[`${ticker}_${buyDate}`] !== undefined) continue;
 
-        let found=null;
-        for(let d=0; d<=10; d++){
-          const dt = new Date(buy);
-          dt.setUTCDate(dt.getUTCDate()+d);
-          const y = dt.getUTCFullYear();
-          const m = String(dt.getUTCMonth()+1).padStart(2,'0');
-          const day = String(dt.getUTCDate()).padStart(2,'0');
-          const tryYMD = `${y}-${m}-${day}`;
-          found = await oneDay(ticker, tryYMD);
-          if(found!=null){ out[`${ticker}_${t.purchaseDate}`] = found; break; }
-          await new Promise(r=>setTimeout(r,150));
+        let foundPrice = null;
+        
+        // 1. Try fetching the specific date range first
+        const startDate = new Date(buyDate);
+        const period1 = Math.floor(startDate.getTime()/1000);
+        
+        // We look forward far enough to catch a listing date if it's a new stock
+        // For normal stocks, this grabs the day. For demerged stocks, it grabs the first trading day.
+        const endDate = new Date(); // Today
+        const period2 = Math.floor(endDate.getTime()/1000);
+
+        for(const p of proxies){
+           try{
+             // Request all data from purchase date until today
+             const url = p + encodeURIComponent(
+               `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d`
+             );
+             const r = await fetch(url);
+             if(!r.ok) continue; 
+             
+             const text = await r.text();
+             if(text.includes('<html') || text.includes('Error')) continue;
+
+             const data = JSON.parse(text);
+             const res = data?.chart?.result?.[0];
+             const quotes = res?.indicators?.quote?.[0]?.close;
+             const currency = res?.meta?.currency || 'USD';
+
+             // THE FIX: Find the first non-null value in the array
+             const firstValidPrice = quotes?.find(price => price != null);
+
+             if(firstValidPrice != null){
+               foundPrice = await convertToUSD(firstValidPrice, currency);
+               break; // Found it, stop trying proxies
+             }
+           } catch(e){ 
+             console.warn(`Proxy fail for ${ticker}:`, e.message);
+           }
         }
-        if(found==null){
-          console.warn(`No historical close found for ${ticker} around ${buy} (skipped)`);
+
+        if(foundPrice !== null){
+          out[`${ticker}_${buyDate}`] = foundPrice;
+        } else {
+          console.warn(`Could not fetch any history for ${ticker}. Defaulting to current price.`);
+          out[`${ticker}_${buyDate}`] = 0; 
         }
+        
+        // Tiny pause to be polite to the API
+        await new Promise(r => setTimeout(r, 100)); 
       }
       return out;
     }
