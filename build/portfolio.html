@@ -558,8 +558,8 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
           if(data.price == null) throw new Error('No price in response');
           prices[ticker] = data.price; // Server already returns USD
         }catch(e){
-          console.error(`Failed to fetch ${ticker}:`, e);
-          throw new Error(`Failed realtime for ${ticker}: ${e.message}`);
+          console.warn(`Failed to fetch realtime price for ${ticker}:`, e.message);
+          prices[ticker] = 0; // This prevents the crash and defaults the price to $0
         }
         // Small delay between requests
         if(i<uniqueTickers.length-1) await new Promise(r=>setTimeout(r,100));
