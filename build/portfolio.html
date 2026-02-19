@@ -542,62 +542,62 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
     // Change this to your Codespace forwarded URL or localhost when running locally
     // const SERVER_URL = 'https://verbose-space-engine-jjgjxrqg7qwqfrq4-5000.app.github.dev';
 
-   // --- Realtime prices via BATCHING (1 request instead of 12) ---
+   // --- Realtime prices via PROXY ROTATION & v8 Chart Endpoint ---
     async function fetchStockPrices(trades){
       const prices = {};
       const uniqueTickers = [...new Set(
         trades.map(t=>t.ticker).filter(t=>t && !t.startsWith('^'))
       )];
-      
-      // Combine all tickers into one comma-separated string to bypass rate limits!
-      const symbolString = uniqueTickers.join(',');
-      
-      const proxies = [
+
+      const proxyPool = [
         'https://corsproxy.io/?', 
         'https://api.allorigins.win/raw?url=',
-        'https://api.cors.lol/?url=' // Added a 3rd proxy
+        'https://api.cors.lol/?url='
       ];
 
-      let success = false;
-      
-      for(const p of proxies){
-        if(success) break;
-        try{
-          // Use the v7 quote endpoint which supports batched symbols
-          const url = p + encodeURIComponent(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolString}`);
-          const response = await fetch(url);
-          if(!response.ok) throw new Error(`HTTP ${response.status}`);
-          
-          const data = await response.json();
-          const results = data?.quoteResponse?.result;
-          
-          if(!results || results.length === 0) throw new Error('No price data found');
-          
-          // Loop through the single massive response and assign prices instantly
-          for(const res of results) {
-             const ticker = res.symbol;
-             const priceLocal = res.regularMarketPrice;
-             const currency = res.currency || 'USD';
-             
-             if(priceLocal != null){
-               const priceUSD = await convertToUSD(priceLocal, currency);
-               prices[ticker] = priceUSD;
-             }
-          }
-          success = true;
-        }catch(e){
-          console.log(`[Proxy Error] Batched Realtime via ${p} failed:`, e.message);
-        }
-      }
-      
-      // Safety net: default to 0 if any specific ticker failed to return
-      for(const ticker of uniqueTickers){
-        if(prices[ticker] === undefined){
-           console.warn(`Failed realtime price for ${ticker}, defaulting to 0`);
-           prices[ticker] = 0;
-        }
-      }
+      for(let i=0; i<uniqueTickers.length; i++){
+        const ticker = uniqueTickers[i];
+        let success = false;
+        
+        // Shuffle proxies to avoid rate limits
+        const shuffledProxies = [...proxyPool].sort(() => 0.5 - Math.random());
 
+        for(const p of shuffledProxies){
+          if(success) break;
+          try{
+            // Reverting to the v8 chart endpoint which bypasses the cookie block
+            const url = p + encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1m&range=1d`);
+            const response = await fetch(url);
+            if(!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            
+            const meta = data?.chart?.result?.[0]?.meta;
+            if(!meta) throw new Error('No price data found');
+            
+            const priceLocal = meta.regularMarketPrice;
+            const currency = meta.currency || 'USD';
+            
+            if(priceLocal != null){
+              const priceUSD = await convertToUSD(priceLocal, currency);
+              prices[ticker] = priceUSD;
+              success = true;
+            }
+          }catch(e){
+            console.log(`[Proxy Error] Realtime ${ticker} via ${p} failed:`, e.message);
+          }
+        }
+        
+        if(!success){
+          console.warn(`Failed realtime price for ${ticker}, defaulting to 0`);
+          prices[ticker] = 0; 
+        }
+        
+        // Jitter delay between requests (800ms - 1500ms)
+        if(i < uniqueTickers.length - 1) {
+          const jitter = Math.floor(Math.random() * 700) + 800;
+          await new Promise(r=>setTimeout(r, jitter));
+        }
+      }
       return prices;
     }
 
