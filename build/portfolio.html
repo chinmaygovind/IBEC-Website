@@ -542,74 +542,93 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
     // Change this to your Codespace forwarded URL or localhost when running locally
     // const SERVER_URL = 'https://verbose-space-engine-jjgjxrqg7qwqfrq4-5000.app.github.dev';
 
-    // --- Realtime prices for summary/table via Yahoo Finance ---
+   // --- Realtime prices via BATCHING (1 request instead of 12) ---
     async function fetchStockPrices(trades){
       const prices = {};
       const uniqueTickers = [...new Set(
         trades.map(t=>t.ticker).filter(t=>t && !t.startsWith('^'))
       )];
-      const proxies = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
+      
+      // Combine all tickers into one comma-separated string to bypass rate limits!
+      const symbolString = uniqueTickers.join(',');
+      
+      const proxies = [
+        'https://corsproxy.io/?', 
+        'https://api.allorigins.win/raw?url=',
+        'https://api.cors.lol/?url=' // Added a 3rd proxy
+      ];
 
-      for(let i=0; i<uniqueTickers.length; i++){
-        const ticker = uniqueTickers[i];
-        let success = false;
-        
-        for(const p of proxies){
-          if(success) break;
-          try{
-            const url = p + encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1m&range=1d`);
-            const response = await fetch(url);
-            if(!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            
-            const meta = data?.chart?.result?.[0]?.meta;
-            if(!meta) throw new Error('No price data found');
-            
-            const priceLocal = meta.regularMarketPrice;
-            const currency = meta.currency || 'USD';
-            
-            if(priceLocal != null){
-              // Convert foreign stocks to USD automatically
-              const priceUSD = await convertToUSD(priceLocal, currency);
-              prices[ticker] = priceUSD;
-              success = true;
-            }
-          }catch(e){
-            // Silently fail and try the next proxy in the list
+      let success = false;
+      
+      for(const p of proxies){
+        if(success) break;
+        try{
+          // Use the v7 quote endpoint which supports batched symbols
+          const url = p + encodeURIComponent(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbolString}`);
+          const response = await fetch(url);
+          if(!response.ok) throw new Error(`HTTP ${response.status}`);
+          
+          const data = await response.json();
+          const results = data?.quoteResponse?.result;
+          
+          if(!results || results.length === 0) throw new Error('No price data found');
+          
+          // Loop through the single massive response and assign prices instantly
+          for(const res of results) {
+             const ticker = res.symbol;
+             const priceLocal = res.regularMarketPrice;
+             const currency = res.currency || 'USD';
+             
+             if(priceLocal != null){
+               const priceUSD = await convertToUSD(priceLocal, currency);
+               prices[ticker] = priceUSD;
+             }
           }
+          success = true;
+        }catch(e){
+          console.log(`[Proxy Error] Batched Realtime via ${p} failed:`, e.message);
         }
-        
-        if(!success){
-          console.warn(`Failed realtime price for ${ticker}, defaulting to 0`);
-          prices[ticker] = 0; 
-        }
-        
-        // Small delay between requests to avoid rate limits
-        if(i < uniqueTickers.length - 1) await new Promise(r=>setTimeout(r,150));
       }
+      
+      // Safety net: default to 0 if any specific ticker failed to return
+      for(const ticker of uniqueTickers){
+        if(prices[ticker] === undefined){
+           console.warn(`Failed realtime price for ${ticker}, defaulting to 0`);
+           prices[ticker] = 0;
+        }
+      }
+
       return prices;
     }
 
-    // --- Historical purchase prices via Yahoo Finance ---
+    // --- Historical purchase prices via PROXY ROTATION ---
     async function fetchHistoricalPrices(trades){
       const out = {};
       const cleanTrades = trades.filter(t => !t.ticker.startsWith('^'));
-      const proxies = ['https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
+      
+      // Expanded pool of free proxies
+      const proxyPool = [
+        'https://corsproxy.io/?', 
+        'https://api.allorigins.win/raw?url=',
+        'https://api.cors.lol/?url='
+      ];
 
       for(const t of cleanTrades){
         const ticker = t.ticker;
-        const buyDate = t.purchaseDate; // YYYY-MM-DD
+        const buyDate = t.purchaseDate;
         
         if(out[`${ticker}_${buyDate}`] !== undefined) continue;
 
-        // Create a 7-day search window to account for weekends/market holidays
         const d = new Date(buyDate + 'T00:00:00Z');
         const period1 = Math.floor(d.getTime() / 1000);
         const period2 = period1 + (7 * 24 * 60 * 60); 
 
         let success = false;
         
-        for(const p of proxies){
+        // Shuffle the proxy pool randomly so we don't hammer the same one over and over
+        const shuffledProxies = [...proxyPool].sort(() => 0.5 - Math.random());
+        
+        for(const p of shuffledProxies){
           if(success) break;
           try{
             const url = p + encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d`);
@@ -622,7 +641,6 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
             const adj = res?.indicators?.adjclose?.[0]?.adjclose || [];
             const close = res?.indicators?.quote?.[0]?.close || [];
             
-            // Grab the first valid trading price in that 7-day window
             let priceLocal = null;
             for(let i = 0; i < close.length; i++){
               const px = adj[i] ?? close[i];
@@ -633,7 +651,6 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
             }
 
             if(priceLocal != null){
-              // Convert to USD using the FX rate from the specific purchase date
               let fxRate = 1;
               if(currency !== 'USD'){
                 fxRate = await getFxRateOnDateToUSD(currency, buyDate);
@@ -642,7 +659,7 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
               success = true;
             }
           }catch(e){
-            // Silently fail and try the next proxy
+            console.log(`[Proxy Error] History ${ticker} via ${p} failed:`, e.message);
           }
         }
         
@@ -651,7 +668,9 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
           out[`${ticker}_${buyDate}`] = 0;
         }
         
-        await new Promise(r => setTimeout(r, 150));
+        // Jitter delay: wait a random amount of time between 800ms and 1500ms
+        const jitter = Math.floor(Math.random() * 700) + 800;
+        await new Promise(r => setTimeout(r, jitter));
       }
       return out;
     }
