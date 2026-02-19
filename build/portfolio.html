@@ -825,11 +825,18 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
 
       // Pull local-currency series per ticker
       const tickers = [...new Set(normalizedTrades.map(t=>t.ticker).filter(t=>t && !t.startsWith('^')))];
-      const proxies = ['https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+      
+      const proxyPool = [
+        'https://corsproxy.io/?', 
+        'https://api.allorigins.win/raw?url=',
+        'https://api.cors.lol/?url='
+      ];
 
       async function fetchLocalSeries(ticker){
-        let lastErr=null;
-        for(const p of proxies){
+        let lastErr = null;
+        const shuffledProxies = [...proxyPool].sort(() => 0.5 - Math.random());
+        
+        for(const p of shuffledProxies){
           try{
             const url = p + encodeURIComponent(
               `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d`
@@ -846,17 +853,22 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
             const seriesLocal = {};
             for(let i=0;i<ts.length;i++){ const px=(adj[i] ?? close[i]); if(px!=null) seriesLocal[toY(ts[i])] = px; }
             return { currency, seriesLocal };
-          }catch(e){ lastErr=e; }
+          }catch(e){ lastErr = e; }
         }
-        throw new Error(`History failed for ${ticker}: ${lastErr?.message||'unknown'}`);
+        console.warn(`[Chart Error] Failed to fetch timeseries for ${ticker}`);
+        return { currency: 'USD', seriesLocal: {} };
       }
 
       const perTickerRaw = {};
-      for(let i=0;i<tickers.length;i+=4){
-        const batch = tickers.slice(i,i+4);
-        const results = await Promise.allSettled(batch.map(fetchLocalSeries));
-        results.forEach((r,idx)=>{ if(r.status==='fulfilled') perTickerRaw[batch[idx]] = r.value; });
-        await new Promise(res=>setTimeout(res,250));
+      for(let i=0;i<tickers.length;i++){
+        const tk = tickers[i];
+        const result = await fetchLocalSeries(tk);
+        perTickerRaw[tk] = result;
+        
+        if (i < tickers.length - 1) {
+          const jitter = Math.floor(Math.random() * 600) + 600;
+          await new Promise(res=>setTimeout(res, jitter));
+        }
       }
 
       // Master calendar + FX timeseries for non-USD
