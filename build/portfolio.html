@@ -589,10 +589,10 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
           console.warn(`Failed realtime price for ${ticker}, defaulting to 0`);
           prices[ticker] = 0; 
         }
-        
-        // Add a jitter delay (800ms - 1500ms) between each real-time request
-        const jitter = Math.floor(Math.random() * 700) + 800;
-        await new Promise(r=>setTimeout(r, jitter));
+        // commented out, uncomment to reactive jitter
+        // // Add a jitter delay (800ms - 1500ms) between each real-time request
+        // const jitter = Math.floor(Math.random() * 700) + 800;
+        // await new Promise(r=>setTimeout(r, jitter));
       }
       return prices;
     }
@@ -663,10 +663,10 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
           console.warn(`Failed history for ${ticker} on ${buyDate}, defaulting to 0`);
           out[`${ticker}_${buyDate}`] = 0;
         }
-        
-        // Jitter delay: wait a random amount of time between 800ms and 1500ms
-        const jitter = Math.floor(Math.random() * 700) + 800;
-        await new Promise(r => setTimeout(r, jitter));
+        // commented out artificial delay, uncomment to reimplement
+        // // Jitter delay: wait a random amount of time between 800ms and 1500ms
+        // const jitter = Math.floor(Math.random() * 700) + 800;
+        // await new Promise(r => setTimeout(r, jitter));
       }
       return out;
     }
@@ -860,15 +860,11 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
       }
 
       const perTickerRaw = {};
-      for(let i=0;i<tickers.length;i++){
-        const tk = tickers[i];
-        const result = await fetchLocalSeries(tk);
-        perTickerRaw[tk] = result;
-        
-        if (i < tickers.length - 1) {
-          const jitter = Math.floor(Math.random() * 600) + 600;
-          await new Promise(res=>setTimeout(res, jitter));
-        }
+      for(let i=0;i<tickers.length;i+=4){
+        const batch = tickers.slice(i,i+4);
+        const results = await Promise.allSettled(batch.map(fetchLocalSeries));
+        results.forEach((r,idx)=>{ if(r.status==='fulfilled') perTickerRaw[batch[idx]] = r.value; });
+      }
       }
 
       // Master calendar + FX timeseries for non-USD
