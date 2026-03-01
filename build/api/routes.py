@@ -1,6 +1,8 @@
 import requests
 import time
+import threading
 import yfinance as yf
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from flask import request, jsonify
 from api import api_bp
 from datetime import datetime, timedelta
@@ -63,6 +65,127 @@ def stock_chart(ticker):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 502
+
+
+# ---------------------------------------------------------------------------
+# In-memory cache (survives across requests within the same worker process)
+# ---------------------------------------------------------------------------
+_cache = {}
+_cache_lock = threading.Lock()
+CACHE_TTL = 300  # seconds
+
+
+def _cache_get(key):
+    with _cache_lock:
+        entry = _cache.get(key)
+        if entry and (time.time() - entry['ts']) < CACHE_TTL:
+            return entry['data']
+    return None
+
+
+def _cache_set(key, data):
+    with _cache_lock:
+        _cache[key] = {'data': data, 'ts': time.time()}
+
+
+def _fetch_ticker_data(ticker, start, end):
+    """Fetch history + currency for one ticker. Designed to run in a thread."""
+    stock = yf.Ticker(ticker)
+    hist = stock.history(start=start, end=end, interval='1d')
+
+    timestamps = []
+    closes = []
+    if not hist.empty:
+        for idx, row in hist.iterrows():
+            timestamps.append(int(idx.timestamp()))
+            closes.append(row.get('Close'))
+
+    market_price = closes[-1] if closes else None
+
+    currency = 'USD'
+    if '=' not in ticker:
+        try:
+            md = getattr(stock, 'history_metadata', None)
+            if md and md.get('currency'):
+                currency = md['currency']
+            else:
+                currency = getattr(stock.fast_info, 'currency', 'USD') or 'USD'
+        except Exception:
+            pass
+
+    return ticker, {
+        'currency': currency,
+        'marketPrice': market_price,
+        'timestamps': timestamps,
+        'closes': closes,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Bulk fetch: POST /api/stock/bulk
+# Accepts {"tickers": [...], "period1": <unix>, "period2": <unix>}
+# Returns {"results": {ticker: {...}}, "fx": {currency: {...}}}
+# ---------------------------------------------------------------------------
+@api_bp.route('/stock/bulk', methods=['POST'])
+def stock_bulk():
+    body = request.get_json() or {}
+    tickers = list(set(body.get('tickers', [])))
+    period1 = int(body.get('period1', 0))
+    period2 = int(body.get('period2', 0))
+
+    if not tickers:
+        return jsonify({'results': {}, 'fx': {}})
+
+    cache_key = f"bulk:{'|'.join(sorted(tickers))}:{period1}:{period2}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return jsonify(cached)
+
+    start = datetime.utcfromtimestamp(period1)
+    end = datetime.utcfromtimestamp(period2)
+
+    # Phase 1: fetch all stock tickers in parallel
+    results = {}
+    workers = min(len(tickers), 10)
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_fetch_ticker_data, t, start, end): t
+                   for t in tickers}
+        for future in as_completed(futures):
+            try:
+                ticker, data = future.result()
+                results[ticker] = data
+            except Exception:
+                ticker = futures[future]
+                results[ticker] = {
+                    'currency': 'USD', 'marketPrice': 0,
+                    'timestamps': [], 'closes': [],
+                }
+
+    # Phase 2: determine non-USD currencies and fetch FX pairs
+    non_usd = set(
+        v['currency'] for v in results.values()
+        if v.get('currency') and v['currency'] != 'USD'
+    )
+    fx = {}
+    if non_usd:
+        fx_tickers = [f"{cur}USD=X" for cur in non_usd]
+        with ThreadPoolExecutor(max_workers=len(fx_tickers)) as pool:
+            futures = {pool.submit(_fetch_ticker_data, t, start, end): t
+                       for t in fx_tickers}
+            for future in as_completed(futures):
+                try:
+                    pair, data = future.result()
+                    cur = pair.replace('USD=X', '')
+                    fx[cur] = {
+                        'timestamps': data['timestamps'],
+                        'closes': data['closes'],
+                    }
+                except Exception:
+                    pass
+
+    response = {'results': results, 'fx': fx}
+    _cache_set(cache_key, response)
+    return jsonify(response)
 
 
 # ---------------------------------------------------------------------------

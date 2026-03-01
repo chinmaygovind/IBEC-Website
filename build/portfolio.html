@@ -356,56 +356,16 @@
     let portfolioChart = null;
     const INITIAL_CAPITAL = 100000;
 
-    const FX_CACHE = new Map();
-    const FX_TTL_MS = 6 * 60 * 60 * 1000;
-
-    async function getFxRateToUSD(fromCurrency){
-      if(!fromCurrency || fromCurrency === 'USD') return 1;
-      const cached = FX_CACHE.get(fromCurrency);
-      if(cached && (Date.now()-cached.ts) < FX_TTL_MS) return cached.rate;
-
-      const r = await fetch(`/api/fx/rate?from=${encodeURIComponent(fromCurrency)}`);
-      if(!r.ok) throw new Error(`FX rate unavailable for ${fromCurrency}`);
-      const data = await r.json();
-      if(!data.rate || !isFinite(data.rate)) throw new Error(`FX rate unavailable for ${fromCurrency}`);
-      FX_CACHE.set(fromCurrency, {rate: data.rate, ts: Date.now()});
-      return data.rate;
-    }
-
-    async function getFxRateOnDateToUSD(fromCurrency, dateStr){
-      if(!fromCurrency || fromCurrency === 'USD') return 1;
-      const r = await fetch(`/api/fx/rate?from=${encodeURIComponent(fromCurrency)}&date=${encodeURIComponent(dateStr)}`);
-      if(!r.ok) throw new Error(`FX rate on ${dateStr} unavailable for ${fromCurrency}`);
-      const data = await r.json();
-      if(!data.rate || !isFinite(data.rate)) throw new Error(`FX rate on ${dateStr} unavailable for ${fromCurrency}`);
-      return data.rate;
-    }
-
-
-
-    async function convertToUSD(amount, fromCurrency){
-      if(fromCurrency==='USD') return amount;
-      const rate = await getFxRateToUSD(fromCurrency);
-      return amount * rate;
-    }
-
     async function loadPortfolioData(){
       try{
         const trades = await loadTradesFromCSV();
-
-        // Filter out future-dated trades everywhere
         const todayYMD = ymd(new Date());
         const activeTrades = trades.filter(t => t.purchaseDate <= todayYMD);
 
         document.getElementById('lastUpdated').textContent = 'Fetching stock data...';
-        const allTickerData = await fetchAllTickerData(activeTrades);
-
-        const startMillis = Math.min(...activeTrades.map(t=>new Date(t.purchaseDate).getTime()));
-        const [fxSeries, stockPrices, historicalPrices] = await Promise.all([
-          fetchFxSeriesViaYahoo(allTickerData, Math.floor(startMillis/1000), Math.floor(Date.now()/1000)),
-          deriveCurrentPrices(allTickerData),
-          deriveHistoricalPrices(activeTrades, allTickerData)
-        ]);
+        const { allTickerData, fxSeries } = await fetchAllDataBulk(activeTrades);
+        const stockPrices = deriveCurrentPricesFromBulk(allTickerData, fxSeries);
+        const historicalPrices = deriveHistoricalPricesFromBulk(activeTrades, allTickerData, fxSeries);
 
         document.getElementById('lastUpdated').textContent = `Prices updated: ${new Date().toLocaleString()}`;
 
@@ -462,72 +422,62 @@
       return trades;
     }
 
-    async function fetchAllTickerData(trades){
+    async function fetchAllDataBulk(trades){
       const tickers = [...new Set(trades.map(t=>t.ticker).filter(t=>t && !t.startsWith('^')))];
       const startMillis = Math.min(...trades.map(t=>new Date(t.purchaseDate).getTime()));
       const period1 = Math.floor(startMillis / 1000);
       const period2 = Math.floor(Date.now() / 1000);
-      const allData = {};
-      for(let i=0;i<tickers.length;i+=4){
-        const batch = tickers.slice(i,i+4);
-        const results = await Promise.allSettled(batch.map(async ticker=>{
-          const r = await fetch(`/api/stock/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d`);
-          if(!r.ok) throw new Error(`HTTP ${r.status}`);
-          const data = await r.json();
-          const res = data?.chart?.result?.[0];
-          const currency = res?.meta?.currency || 'USD';
-          const marketPrice = res?.meta?.regularMarketPrice;
-          const ts = res?.timestamp || [];
-          const adj = res?.indicators?.adjclose?.[0]?.adjclose || [];
-          const close = res?.indicators?.quote?.[0]?.close || [];
-          const toYMD = s=>{const d=new Date(s*1000);return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;};
-          const seriesLocal = {};
-          for(let j=0;j<ts.length;j++){const px=(adj[j]??close[j]);if(px!=null) seriesLocal[toYMD(ts[j])]=px;}
-          return {ticker, currency, marketPrice, seriesLocal};
-        }));
-        results.forEach((r,idx)=>{
-          if(r.status==='fulfilled') allData[batch[idx]]=r.value;
-          else{ console.warn(`Failed to fetch ${batch[idx]}:`,r.reason); allData[batch[idx]]={ticker:batch[idx],currency:'USD',marketPrice:0,seriesLocal:{}}; }
-        });
-      }
-      return allData;
-    }
 
-    async function fetchFxSeriesViaYahoo(allTickerData, period1, period2){
-      const currencies = [...new Set(Object.values(allTickerData).map(d=>d.currency).filter(c=>c && c!=='USD'))];
-      const fxSeries = {};
-      if(!currencies.length) return fxSeries;
-      const toYMD = s=>{const d=new Date(s*1000);return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;};
-      const results = await Promise.allSettled(currencies.map(async cur=>{
-        const pair = `${cur}USD=X`;
-        const r = await fetch(`/api/stock/chart/${pair}?period1=${period1}&period2=${period2}&interval=1d`);
-        if(!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-        const res = data?.chart?.result?.[0];
-        const ts = res?.timestamp || [];
-        const close = res?.indicators?.quote?.[0]?.close || [];
-        const series = {};
-        for(let i=0;i<ts.length;i++){if(close[i]!=null) series[toYMD(ts[i])]=close[i];}
-        return {currency:cur, series};
-      }));
-      results.forEach(r=>{
-        if(r.status==='fulfilled') fxSeries[r.value.currency]=r.value.series;
-        else console.warn('FX series fetch failed:', r.reason);
+      const r = await fetch('/api/stock/bulk', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ tickers, period1, period2 })
       });
-      return fxSeries;
+      if(!r.ok) throw new Error(`Bulk fetch failed: HTTP ${r.status}`);
+      const body = await r.json();
+
+      const toYMD = s => {
+        const d = new Date(s * 1000);
+        return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+      };
+
+      const allTickerData = {};
+      for(const [ticker, data] of Object.entries(body.results || {})){
+        const seriesLocal = {};
+        for(let i = 0; i < data.timestamps.length; i++){
+          if(data.closes[i] != null) seriesLocal[toYMD(data.timestamps[i])] = data.closes[i];
+        }
+        allTickerData[ticker] = { ticker, currency: data.currency, marketPrice: data.marketPrice, seriesLocal };
+      }
+
+      const fxSeries = {};
+      for(const [cur, data] of Object.entries(body.fx || {})){
+        const series = {};
+        for(let i = 0; i < data.timestamps.length; i++){
+          if(data.closes[i] != null) series[toYMD(data.timestamps[i])] = data.closes[i];
+        }
+        fxSeries[cur] = series;
+      }
+
+      return { allTickerData, fxSeries };
     }
 
-    async function deriveCurrentPrices(allTickerData){
+    function deriveCurrentPricesFromBulk(allTickerData, fxSeries){
       const prices = {};
-      for(const [ticker,data] of Object.entries(allTickerData)){
-        try{
-          prices[ticker] = (data.marketPrice!=null) ? await convertToUSD(data.marketPrice, data.currency) : 0;
-        }catch(e){ console.warn(`Failed current price for ${ticker}:`,e.message); prices[ticker]=0; }
+      for(const [ticker, data] of Object.entries(allTickerData)){
+        const localPrice = data.marketPrice || 0;
+        if(data.currency === 'USD'){
+          prices[ticker] = localPrice;
+        } else {
+          const fxDates = Object.keys(fxSeries[data.currency] || {}).sort();
+          const latestFx = fxDates.length ? fxSeries[data.currency][fxDates[fxDates.length - 1]] : 1;
+          prices[ticker] = localPrice * latestFx;
+        }
       }
       return prices;
     }
 
-    async function deriveHistoricalPrices(trades, allTickerData){
+    function deriveHistoricalPricesFromBulk(trades, allTickerData, fxSeries){
       const out = {};
       const cleanTrades = trades.filter(t => !t.ticker.startsWith('^'));
       for(const t of cleanTrades){
@@ -535,16 +485,20 @@
         const key = `${ticker}_${buyDate}`;
         if(out[key] !== undefined) continue;
         const data = allTickerData[ticker];
-        if(!data||!data.seriesLocal){ out[key]=0; continue; }
+        if(!data || !data.seriesLocal){ out[key] = 0; continue; }
         const sortedDates = Object.keys(data.seriesLocal).sort();
         let priceLocal = null;
-        for(const d of sortedDates){ if(d>=buyDate){ priceLocal=data.seriesLocal[d]; break; } }
-        if(priceLocal!=null){
-          try{
-            const fxRate = (data.currency!=='USD') ? await getFxRateOnDateToUSD(data.currency, buyDate) : 1;
+        for(const d of sortedDates){ if(d >= buyDate){ priceLocal = data.seriesLocal[d]; break; } }
+        if(priceLocal != null){
+          if(data.currency !== 'USD'){
+            const fxDates = Object.keys(fxSeries[data.currency] || {}).sort();
+            let fxRate = 1;
+            for(const d of fxDates){ if(d >= buyDate){ fxRate = fxSeries[data.currency][d]; break; } }
             out[key] = priceLocal * fxRate;
-          }catch(e){ console.warn(`Failed historical FX for ${ticker} on ${buyDate}:`,e.message); out[key]=0; }
-        }else{ out[key]=0; }
+          } else {
+            out[key] = priceLocal;
+          }
+        } else { out[key] = 0; }
       }
       return out;
     }
