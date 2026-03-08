@@ -865,7 +865,7 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
         const results = await Promise.allSettled(batch.map(fetchLocalSeries));
         results.forEach((r,idx)=>{ if(r.status==='fulfilled') perTickerRaw[batch[idx]] = r.value; });
       }
-      }
+      
 
       // Master calendar + FX timeseries for non-USD
       const cal = makeCalendar(ymd(new Date(startDate.getTime())), ymd(new Date(endDate.getTime())));
@@ -958,6 +958,5 @@ async function getFxRateOnDateToUSD(fromCurrency, ymd){
   <script src="assets/js/breakpoints.min.js"></script>
   <script src="assets/js/util.js"></script>
   <script src="assets/js/main.js"></script>
-</body>
 </body>
 </html>
