@@ -27,9 +27,14 @@ def stock_chart(ticker):
             range_str = request.args.get('range', '1d')
             hist = stock.history(period=range_str, interval=interval)
 
-        fast = stock.fast_info
-        currency = getattr(fast, 'currency', 'USD') or 'USD'
-        market_price = getattr(fast, 'last_price', None)
+        try:
+            currency = stock.fast_info['currency']
+        except (KeyError, AttributeError, Exception):
+            currency = 'USD'
+        try:
+            market_price = stock.fast_info['lastPrice']
+        except (KeyError, AttributeError, Exception):
+            market_price = None
 
         timestamps = []
         closes = []
@@ -109,7 +114,7 @@ def _fetch_ticker_data(ticker, start, end):
             if md and md.get('currency'):
                 currency = md['currency']
             else:
-                currency = getattr(stock.fast_info, 'currency', 'USD') or 'USD'
+                currency = stock.fast_info['currency']
         except Exception:
             pass
 

@@ -428,7 +428,8 @@
       const period1 = Math.floor(startMillis / 1000);
       const period2 = Math.floor(Date.now() / 1000);
 
-      const r = await fetch('/api/stock/bulk', {
+      const API_BASE = 'https://ctboavoqytq4bci6y45uyvk6me0qbgyd.lambda-url.us-east-1.on.aws';
+      const r = await fetch(`${API_BASE}/api/stock/bulk`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ tickers, period1, period2 })

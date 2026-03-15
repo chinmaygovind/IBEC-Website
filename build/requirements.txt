@@ -1,4 +1,7 @@
-flask
+apig-wsgi
+flask==3.0.0
 gunicorn
-requests
-yfinance
+numpy==1.26.4
+pandas==2.2.1
+requests==2.32.5
+yfinance==1.2.0

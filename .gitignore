@@ -10,6 +10,10 @@ __pycache__/
 *.pyo
 *.pyd
 
+# AWS SAM build artifacts
+.aws-sam/
+samconfig.toml
+
 # Distribution / packaging
 *.egg-info/
 *.egg
