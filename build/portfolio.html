@@ -577,7 +577,7 @@
       const r = document.getElementById('totalReturn');
       const pl = document.getElementById('profitLoss');
       
-      if (summary.total_return_pct >= 0) { 
+      if (p.totalReturn >= 0) { 
           r.style.color = '#28a745'; pl.style.color = '#28a745'; 
       } else { 
           r.style.color = '#dc3545'; pl.style.color = '#dc3545'; 
@@ -593,11 +593,12 @@
         tr.innerHTML = `
           <td><strong>${h.ticker}</strong></td>
           <td>${h.shares.toLocaleString()}</td>
-          <td>$${h.purchase_price.toFixed(2)}</td>
-          <td>$${h.current_price.toFixed(2)}</td>
-          <td>$${h.market_value.toLocaleString('en-US', {maximumFractionDigits:0})}</td>
-          <td class="${h.profit_loss >= 0 ? 'positive' : 'negative'}">$${h.profit_loss.toLocaleString('en-US', {maximumFractionDigits:0})}</td>
-          <td class="${h.return_pct >= 0 ? 'positive' : 'negative'}">${h.return_pct.toFixed(2)}%</td>`;
+          <td>${h.initialPurchaseDate || ''}</td>
+          <td>$${h.purchasePrice.toFixed(2)}</td>
+          <td>$${h.currentPrice.toFixed(2)}</td>
+          <td>$${h.marketValue.toLocaleString('en-US', {maximumFractionDigits:0})}</td>
+          <td class="${h.profitLoss >= 0 ? 'positive' : 'negative'}">$${h.profitLoss.toLocaleString('en-US', {maximumFractionDigits:0})}</td>
+          <td class="${h.returnPct >= 0 ? 'positive' : 'negative'}">${h.returnPct.toFixed(2)}%</td>`;
       });
     }
 
