@@ -89,6 +89,21 @@
       padding: 40px;
       font-size: 1.2em;
       color: #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .loading .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid #ccc;
+      border-top-color: #666;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
     .error {
       text-align: center;
@@ -266,7 +281,7 @@
     <div class="wrapper style1">
       <h1 id="portfolio-performance" style="text-align: center; font-size: 2em; margin-bottom: 30px;">IBEC Portfolio Performance</h1>
       
-      <div id="loadingMessage" class="loading">Loading portfolio data...</div>
+      <div id="loadingMessage" class="loading"><span class="spinner"></span> Loading portfolio data...</div>
       <div id="errorMessage" class="error" style="display: none;"></div>
       
       <div id="portfolioContent" style="display: none;">
@@ -339,42 +354,225 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     let portfolioChart = null;
+    const INITIAL_CAPITAL = 100000;
 
-    async function loadPortfolioData() {
-      try {
-        const response = await fetch('/api');
-        if (!response.ok) throw new Error(`Server returned ${response.status}`);
-        
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
+    async function loadPortfolioData(){
+      try{
+        const trades = await loadTradesFromCSV();
+        const todayYMD = ymd(new Date());
+        const activeTrades = trades.filter(t => t.purchaseDate <= todayYMD);
 
-        updateSummaryCards(data.summary);
-        updateHoldingsTable(data.holdings);
-
-        const today = new Date().toISOString().slice(0, 10);
-        if (data.chart) {
-            createPortfolioChart(data.chart.dates, data.chart.values);
-        } else {
-            createPortfolioChart(['Initial', today], [data.summary.initial_capital, data.summary.current_value]);
-        }
+        document.getElementById('lastUpdated').textContent = 'Fetching stock data...';
+        const { allTickerData, fxSeries } = await fetchAllDataBulk(activeTrades);
+        const stockPrices = deriveCurrentPricesFromBulk(allTickerData, fxSeries);
+        const historicalPrices = deriveHistoricalPricesFromBulk(activeTrades, allTickerData, fxSeries);
 
         document.getElementById('loadingMessage').style.display = 'none';
         document.getElementById('portfolioContent').style.display = 'block';
         document.getElementById('lastUpdated').textContent = `Prices updated: ${new Date().toLocaleString()}`;
 
-      } catch (err) {
-        console.error("Failed to load portfolio:", err);
-        document.getElementById('loadingMessage').style.display = 'none';
+        const portfolioData = calculatePortfolioPerformance(activeTrades, stockPrices, historicalPrices);
+
+        updateSummaryCards(portfolioData);
+        updateHoldingsTable(portfolioData.holdings);
+        createPortfolioChart(portfolioData, activeTrades, allTickerData, fxSeries);
+
+        document.getElementById('loadingMessage').style.display='none';
+        document.getElementById('portfolioContent').style.display='block';
+      }catch(err){
+        console.error(err);
+        document.getElementById('loadingMessage').style.display='none';
         const el = document.getElementById('errorMessage');
         el.style.display = 'block';
         el.textContent = `Error loading portfolio: ${err.message}`;
       }
     }
 
-    function updateSummaryCards(summary) {
-      document.getElementById('currentValue').textContent = `$${summary.current_value.toLocaleString('en-US', {maximumFractionDigits:0})}`;
-      document.getElementById('totalReturn').textContent = `${summary.total_return_pct.toFixed(2)}%`;
-      document.getElementById('profitLoss').textContent  = `$${summary.profit_loss.toLocaleString('en-US', {maximumFractionDigits:0})}`;
+    async function loadTradesFromCSV(){
+      const response = await fetch('trades.csv?cb=' + Date.now(), { cache: 'no-store' });
+      if(!response.ok) throw new Error(`Failed to load trades.csv (${response.status}). Serve the page from a web server so portfolio.html and trades.csv are in the same origin.`);
+      const csvText = await response.text();
+      const lines = csvText.trim().split('\n');
+
+      const toYMD = (str)=>{
+        const s = String(str||'').trim().replace(/\//g,'-');
+        const [y,m,d] = s.split('-').map(x=>parseInt(x,10));
+        if(!y || !m || !d) { return ymd(new Date()); } // fallback to today if malformed
+        const dt = new Date(Date.UTC(y, m-1, d)); // UTC
+        const mm = String(dt.getUTCMonth()+1).padStart(2,'0');
+        const dd = String(dt.getUTCDate()).padStart(2,'0');
+        return `${dt.getUTCFullYear()}-${mm}-${dd}`;
+      };
+
+      const trades=[];
+      for(let i=1;i<lines.length;i++){
+        const line = lines[i];
+        if(!line || !line.trim()) continue;
+        const parts = line.split(',');
+        if(parts.length < 3) continue;
+        const [tickerRaw, sharesRaw, purchaseDate] = parts;
+        const ticker = (tickerRaw||'').trim();
+        const shares = parseInt((sharesRaw||'').trim(),10);
+        if(!ticker || !Number.isFinite(shares)) continue;
+        trades.push({
+          company: ticker,
+          ticker,
+          shares,
+          purchaseDate: toYMD(purchaseDate)
+        });
+      }
+      return trades;
+    }
+
+    async function fetchAllDataBulk(trades){
+      const tickers = [...new Set(trades.map(t=>t.ticker).filter(t=>t && !t.startsWith('^')))];
+      const startMillis = Math.min(...trades.map(t=>new Date(t.purchaseDate).getTime()));
+      const period1 = Math.floor(startMillis / 1000);
+      const period2 = Math.floor(Date.now() / 1000);
+
+      const API_BASE = 'https://ctboavoqytq4bci6y45uyvk6me0qbgyd.lambda-url.us-east-1.on.aws';
+      const r = await fetch(`${API_BASE}/api/stock/bulk`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ tickers, period1, period2 })
+      });
+      if(!r.ok) throw new Error(`Bulk fetch failed: HTTP ${r.status}`);
+      const body = await r.json();
+
+      const toYMD = s => {
+        const d = new Date(s * 1000);
+        return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+      };
+
+      const allTickerData = {};
+      for(const [ticker, data] of Object.entries(body.results || {})){
+        const seriesLocal = {};
+        for(let i = 0; i < data.timestamps.length; i++){
+          if(data.closes[i] != null) seriesLocal[toYMD(data.timestamps[i])] = data.closes[i];
+        }
+        allTickerData[ticker] = { ticker, currency: data.currency, marketPrice: data.marketPrice, seriesLocal };
+      }
+
+      const fxSeries = {};
+      for(const [cur, data] of Object.entries(body.fx || {})){
+        const series = {};
+        for(let i = 0; i < data.timestamps.length; i++){
+          if(data.closes[i] != null) series[toYMD(data.timestamps[i])] = data.closes[i];
+        }
+        fxSeries[cur] = series;
+      }
+
+      return { allTickerData, fxSeries };
+    }
+
+    function deriveCurrentPricesFromBulk(allTickerData, fxSeries){
+      const prices = {};
+      for(const [ticker, data] of Object.entries(allTickerData)){
+        const localPrice = data.marketPrice || 0;
+        if(data.currency === 'USD'){
+          prices[ticker] = localPrice;
+        } else {
+          const fxDates = Object.keys(fxSeries[data.currency] || {}).sort();
+          const latestFx = fxDates.length ? fxSeries[data.currency][fxDates[fxDates.length - 1]] : 1;
+          prices[ticker] = localPrice * latestFx;
+        }
+      }
+      return prices;
+    }
+
+    function deriveHistoricalPricesFromBulk(trades, allTickerData, fxSeries){
+      const out = {};
+      const cleanTrades = trades.filter(t => !t.ticker.startsWith('^'));
+      for(const t of cleanTrades){
+        const ticker = t.ticker, buyDate = t.purchaseDate;
+        const key = `${ticker}_${buyDate}`;
+        if(out[key] !== undefined) continue;
+        const data = allTickerData[ticker];
+        if(!data || !data.seriesLocal){ out[key] = 0; continue; }
+        const sortedDates = Object.keys(data.seriesLocal).sort();
+        let priceLocal = null;
+        for(const d of sortedDates){ if(d >= buyDate){ priceLocal = data.seriesLocal[d]; break; } }
+        if(priceLocal != null){
+          if(data.currency !== 'USD'){
+            const fxDates = Object.keys(fxSeries[data.currency] || {}).sort();
+            let fxRate = 1;
+            for(const d of fxDates){ if(d >= buyDate){ fxRate = fxSeries[data.currency][d]; break; } }
+            out[key] = priceLocal * fxRate;
+          } else {
+            out[key] = priceLocal;
+          }
+        } else { out[key] = 0; }
+      }
+      return out;
+    }
+
+    function calculatePortfolioPerformance(trades, stockPrices, historicalPrices){
+      // Aggregate trades by ticker. Support buys (positive shares) and sells (negative shares).
+      const byTicker = {};
+      for(const t of trades){
+        const tk = t.ticker;
+        if(!byTicker[tk]) byTicker[tk] = { company: t.company || tk, trades: [], netShares:0, buyShares:0, buyAmount:0, earliestBuyDate: null };
+        const purchasePrice = historicalPrices[`${t.ticker}_${t.purchaseDate}`] || 0;
+        byTicker[tk].trades.push({ ...t, purchasePrice });
+        byTicker[tk].netShares += Number(t.shares || 0);
+        if(Number(t.shares) > 0){
+          byTicker[tk].buyShares += Number(t.shares);
+          byTicker[tk].buyAmount += Number(t.shares) * Number(purchasePrice);
+          // track earliest buy date (ISO yyyy-mm-dd strings compare lexicographically)
+          const pd = (t.purchaseDate || '').trim();
+          if(pd){
+            if(!byTicker[tk].earliestBuyDate || pd < byTicker[tk].earliestBuyDate) byTicker[tk].earliestBuyDate = pd;
+          }
+        }
+      }
+
+      const holdings = [];
+      let totalCurrentValue = 0, totalInvested = 0;
+
+      for(const [tk, obj] of Object.entries(byTicker)){
+        const netShares = obj.netShares;
+        // Exclude positions that are fully closed or zero/negative
+        if(!netShares || netShares <= 0) continue;
+
+        // Compute average purchase price across all buy trades (weighted)
+        let avgPurchasePrice = 0;
+        if(obj.buyShares > 0) avgPurchasePrice = obj.buyAmount / obj.buyShares;
+
+        const currentPrice = stockPrices[tk] || 0;
+        const marketValue = netShares * currentPrice;
+        const investedAmount = avgPurchasePrice * netShares;
+        const profitLoss = marketValue - investedAmount;
+        const returnPct = investedAmount > 0 ? (profitLoss / investedAmount) * 100 : 0;
+
+        holdings.push({
+          company: obj.company,
+          ticker: tk,
+          shares: netShares,
+          purchasePrice: avgPurchasePrice,
+          initialPurchaseDate: obj.earliestBuyDate || (obj.trades[0] && obj.trades[0].purchaseDate) || '',
+          currentPrice,
+          marketValue,
+          investedAmount,
+          profitLoss,
+          returnPct
+        });
+
+        totalCurrentValue += marketValue;
+        totalInvested += investedAmount;
+      }
+
+      const cashRemaining = INITIAL_CAPITAL - totalInvested;
+      const totalPortfolioValue = totalCurrentValue + cashRemaining;
+      const totalReturn = ((totalPortfolioValue - INITIAL_CAPITAL)/INITIAL_CAPITAL)*100;
+      const totalProfitLoss = totalPortfolioValue - INITIAL_CAPITAL;
+
+      return { holdings, totalCurrentValue, totalInvested, cashRemaining, totalPortfolioValue, totalReturn, totalProfitLoss };
+    }
+
+    function updateSummaryCards(p){
+      document.getElementById('currentValue').textContent = `$${p.totalPortfolioValue.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+      document.getElementById('totalReturn').textContent = `${p.totalReturn.toFixed(2)}%`;
+      document.getElementById('profitLoss').textContent  = `$${p.totalProfitLoss.toLocaleString('en-US',{maximumFractionDigits:0})}`;
 
       const r = document.getElementById('totalReturn');
       const pl = document.getElementById('profitLoss');
@@ -403,40 +601,127 @@
       });
     }
 
-    function createPortfolioChart(dates, values) {
+    const ALLOW_MARGIN = false;
+
+    function ymd(d){ return d.toISOString().slice(0,10); }
+    function makeCalendar(startYMD, endYMD){
+      const days=[]; let d=new Date(startYMD+'T00:00:00Z'); const end=new Date(endYMD+'T00:00:00Z');
+      while(d<=end){ days.push(ymd(d)); d.setUTCDate(d.getUTCDate()+1); }
+      return days;
+    }
+
+    // future-trade safe: return null if not found
+    function firstOnOrAfter(sortedDates, target){
+      for(const d of sortedDates){ if(d>=target) return d; }
+      return null;
+    }
+
+    function mapSeriesToCalendar(series, calendar){
+      const out=[]; let last=null;
+      for(const d of calendar){ if(series[d]!=null) last=series[d]; out.push(last); }
+      return out;
+    }
+
+    async function createPortfolioChart(portfolioData, tradesArg, allTickerData, fxSeries){
       const ctx = document.getElementById('portfolioChart').getContext('2d');
       if (portfolioChart) portfolioChart.destroy();
 
-      portfolioChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: dates,
-          datasets: [{
-            label: 'Portfolio Value',
-            data: values,
-            borderColor: '#007bff',
-            backgroundColor: 'rgba(0,123,255,0.1)',
-            borderWidth: 2,
-            tension: 0.1,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { title: { display: true, text: 'Date' } },
-            y: { title: { display: true, text: 'Portfolio Value ($)' } }
-          },
-          plugins: {
-            title: { display: true, text: 'Portfolio Performance', font: { size: 16 } },
-            legend: { display: true }
+      const trades = Array.isArray(tradesArg) ? tradesArg : (window.tradesData||[]);
+      if(!trades.length) return;
+
+      const normalizedTrades = trades.map(t=>({
+        ...t, purchaseDate: t.purchaseDate.trim().replace(/\//g,'-')
+      }));
+
+      const startMillis = Math.min(...normalizedTrades.map(t=>new Date(t.purchaseDate).getTime()));
+      const startDate = new Date(startMillis);
+      const endDate = new Date();
+
+      const tickers = [...new Set(normalizedTrades.map(t=>t.ticker).filter(t=>t && !t.startsWith('^')))];
+
+      const perTickerRaw = {};
+      for(const tk of tickers){
+        if(allTickerData[tk]) perTickerRaw[tk] = {currency:allTickerData[tk].currency, seriesLocal:allTickerData[tk].seriesLocal};
+      }
+
+      const cal = makeCalendar(ymd(new Date(startDate.getTime())), ymd(new Date(endDate.getTime())));
+
+      // Convert each ticker series to USD and align to calendar
+      const perTickerUSDCalendar = {};
+      const perTickerDatesSorted = {};
+      for(const [tk, obj] of Object.entries(perTickerRaw)){
+        const { currency, seriesLocal } = obj;
+        const seriesUSD = {};
+        const rawDates = Object.keys(seriesLocal).sort();
+        perTickerDatesSorted[tk] = rawDates;
+        for(const d of rawDates){
+          const fx = (currency==='USD') ? 1 : (fxSeries[currency]?.[d] ?? null);
+          if(fx!=null) seriesUSD[d] = seriesLocal[d] * fx;
+        }
+        perTickerUSDCalendar[tk] = mapSeriesToCalendar(seriesUSD, cal);
+      }
+
+      // Invest on the first trading day >= CSV date
+      const investedOn = new Array(cal.length).fill(0);
+      for(const tr of normalizedTrades){
+        const tk = tr.ticker, shares = tr.shares;
+        const tradingDates = perTickerDatesSorted[tk] || [];
+        if(!tradingDates.length) continue;
+        const effDate = firstOnOrAfter(tradingDates, tr.purchaseDate);
+        if(!effDate) continue;                       // <-- future-dated safety
+        const idx = cal.indexOf(effDate);
+        if(idx === -1) continue;
+        const pxUSD = perTickerUSDCalendar[tk][idx];
+        if(pxUSD!=null){ investedOn[idx] += pxUSD * shares; }
+      }
+
+      const investedSoFar=[]; let cum=0;
+      for(let i=0;i<cal.length;i++){ cum += investedOn[i]; investedSoFar.push(cum); }
+
+      const values=[];
+      for(let i=0;i<cal.length;i++){
+        let holdingsUSD = 0;
+        for(const tr of normalizedTrades){
+          const tk = tr.ticker;
+          const tradingDates = perTickerDatesSorted[tk] || [];
+          if(!tradingDates.length) continue;
+          const effDate = firstOnOrAfter(tradingDates, tr.purchaseDate);
+          if(!effDate) continue;                     // <-- future-dated safety
+          const effIdx = cal.indexOf(effDate);
+          if(effIdx !== -1 && i >= effIdx){
+            const pxUSD = perTickerUSDCalendar[tk][i];
+            if(pxUSD!=null) holdingsUSD += pxUSD * tr.shares;
           }
+        }
+        let cash = INITIAL_CAPITAL - investedSoFar[i];
+        if(!ALLOW_MARGIN && cash < 0) cash = 0;
+        values.push(holdingsUSD + cash);
+      }
+
+      // Weekly sampling to keep chart light
+      const sampledDates=[], sampledValues=[];
+      for(let i=0;i<cal.length;i+=7){ sampledDates.push(cal[i]); sampledValues.push(values[i]); }
+      if(sampledDates[sampledDates.length-1]!==cal[cal.length-1]){
+        sampledDates.push(cal[cal.length-1]); sampledValues.push(values[values.length-1]);
+      }
+
+      // Pin final chart point to the card's "Current Value"
+      if (sampledValues.length){
+        sampledValues[sampledValues.length - 1] = portfolioData.totalPortfolioValue;
+      }
+
+      portfolioChart = new Chart(ctx,{
+        type:'line',
+        data:{labels:sampledDates,datasets:[{label:'Portfolio Value',data:sampledValues,borderColor:'#007bff',backgroundColor:'rgba(0,123,255,0.1)',borderWidth:2,tension:0.1,fill:true}]},
+        options:{responsive:true,maintainAspectRatio:false,
+          scales:{x:{title:{display:true,text:'Date'}},y:{title:{display:true,text:'Portfolio Value ($)'}}},
+          plugins:{title:{display:true,text:'Portfolio Performance Over Time',font:{size:16}},legend:{display:true}}
         }
       });
     }
 
-    document.addEventListener('DOMContentLoaded', () => { loadPortfolioData(); });
+    document.addEventListener('DOMContentLoaded', ()=>{ loadPortfolioData(); });
+
   </script>
   
   <script src="assets/js/jquery.min.js"></script>
