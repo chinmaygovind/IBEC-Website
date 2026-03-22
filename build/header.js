@@ -27,7 +27,7 @@ document.write(`
                <li class="dropdown">
                    <a href="#">Learn</a>
                    <ul>
-                       <li><a href="wharton_survival.html">How to Survive Wharton</a></li>
+                       <li><a href="learn.html">Investment Foundations Program</a></li>
                        <li><a href="podcast.html">Podcast</a></li>
                    </ul>
                </li>

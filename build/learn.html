@@ -1,151 +1,349 @@
 <!DOCTYPE HTML>
-<!--
-	Helios by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
 <html>
 	<head>
-		<title>IBEC - Learn</title>
+		<title>IBEC - Investment Foundations Program</title>
 		<link rel="icon" type="image/x-icon" href="images/ibec.ico">
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 		<style>
+			.ifp-hero {
+				text-align: center;
+				padding: 10px 20px 30px;
+			}
+			.ifp-hero h2 {
+				font-size: 2.2em;
+				color: #1a1a2e;
+				margin-bottom: 5px;
+				letter-spacing: 2px;
+			}
+			.ifp-hero .ifp-badge {
+				display: inline-block;
+				background: linear-gradient(135deg, #007bff, #0056b3);
+				color: #fff;
+				padding: 6px 22px;
+				border-radius: 20px;
+				font-size: 0.85em;
+				font-weight: 600;
+				letter-spacing: 1.5px;
+				text-transform: uppercase;
+				margin-bottom: 18px;
+			}
+			.ifp-hero p {
+				max-width: 780px;
+				margin: 0 auto;
+				font-size: 1.05em;
+				line-height: 1.7;
+				color: #444;
+			}
+
+			/* Three-pillar cards */
+			.pillar-cards {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 24px;
+				margin: 40px 0 50px;
+			}
+			.pillar-card {
+				background: #fff;
+				border-radius: 12px;
+				padding: 30px 24px 24px;
+				box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+				border-top: 4px solid #007bff;
+				text-align: center;
+				transition: transform 0.2s, box-shadow 0.2s;
+			}
+			.pillar-card:nth-child(2) { border-top-color: #28a745; }
+			.pillar-card:nth-child(3) { border-top-color: #fd7e14; }
+			.pillar-card:hover {
+				transform: translateY(-4px);
+				box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+			}
+			.pillar-icon {
+				width: 60px;
+				height: 60px;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin: 0 auto 16px;
+				font-size: 1.6em;
+			}
+			.pillar-card:nth-child(1) .pillar-icon { background: #e8f0fe; color: #007bff; }
+			.pillar-card:nth-child(2) .pillar-icon { background: #e6f4ea; color: #28a745; }
+			.pillar-card:nth-child(3) .pillar-icon { background: #fff3e0; color: #fd7e14; }
+			.pillar-card h3 {
+				font-size: 1.15em;
+				color: #1a1a2e;
+				margin-bottom: 10px;
+			}
+			.pillar-card p {
+				font-size: 0.92em;
+				color: #555;
+				line-height: 1.6;
+			}
+
+			/* Detail sections */
+			.ifp-section {
+				margin: 50px 0;
+			}
+			.ifp-section-header {
+				display: flex;
+				align-items: center;
+				gap: 14px;
+				margin-bottom: 20px;
+			}
+			.ifp-section-header .section-num {
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-weight: 700;
+				font-size: 1.1em;
+				color: #fff;
+				flex-shrink: 0;
+			}
+			.ifp-section-header h3 {
+				font-size: 1.35em;
+				color: #1a1a2e;
+				margin: 0;
+			}
+			.ifp-detail-grid {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 18px;
+				margin-top: 16px;
+			}
+			.ifp-detail-item {
+				background: #f8f9fa;
+				border-radius: 8px;
+				padding: 18px 20px;
+				border-left: 3px solid #007bff;
+			}
+			.ifp-detail-item h4 {
+				font-size: 0.95em;
+				color: #1a1a2e;
+				margin: 0 0 6px;
+			}
+			.ifp-detail-item p {
+				font-size: 0.88em;
+				color: #555;
+				line-height: 1.55;
+				margin: 0;
+			}
+			.ifp-section:nth-child(2) .ifp-detail-item { border-left-color: #28a745; }
+			.ifp-section:nth-child(3) .ifp-detail-item { border-left-color: #fd7e14; }
+
+			/* Certificate banner */
+			.ifp-cert-banner {
+				background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+				color: #fff;
+				border-radius: 14px;
+				padding: 36px 40px;
+				text-align: center;
+				margin: 50px 0 30px;
+				position: relative;
+				overflow: hidden;
+			}
+			.ifp-cert-banner::before {
+				content: '';
+				position: absolute;
+				top: -40px;
+				right: -40px;
+				width: 160px;
+				height: 160px;
+				background: rgba(255,255,255,0.04);
+				border-radius: 50%;
+			}
+			.ifp-cert-banner::after {
+				content: '';
+				position: absolute;
+				bottom: -50px;
+				left: -30px;
+				width: 200px;
+				height: 200px;
+				background: rgba(255,255,255,0.03);
+				border-radius: 50%;
+			}
+			.ifp-cert-banner h3 {
+				font-size: 1.4em;
+				margin-bottom: 10px;
+				position: relative;
+				color: #fff;
+			}
+			.ifp-cert-banner p {
+				font-size: 1em;
+				opacity: 0.9;
+				max-width: 600px;
+				margin: 0 auto;
+				line-height: 1.6;
+				position: relative;
+			}
+			.cert-icon {
+				font-size: 2.4em;
+				margin-bottom: 10px;
+				display: block;
+			}
+
+			/* Divider */
+			.section-divider {
+				height: 2px;
+				background: linear-gradient(to right, #bbb, #eee, #bbb);
+				border-radius: 1px;
+				margin: 40px 0 30px 0;
+			}
+
+			/* Mobile */
 			@media screen and (max-width: 768px) {
-				#main p:first-of-type {
-					font-size: 0.8em;
-					line-height: 1.5;
-				}
+				.ifp-hero h2 { font-size: 1.6em; }
+				.pillar-cards { grid-template-columns: 1fr; gap: 16px; }
+				.ifp-detail-grid { grid-template-columns: 1fr; }
+				.ifp-cert-banner { padding: 28px 20px; }
 			}
 		</style>
 	</head>
-<body class="right-sidebar is-preload" style="background: #fff;" data-header-title="Wharton Crash Course" data-header-image="images/learn/header.webp" data-header-hr="false" data-header-subtitle="false">
+<body class="right-sidebar is-preload" style="background: #fff;" data-header-title="Investment Foundations Program" data-header-image="images/learn/header.webp" data-header-hr="false" data-header-subtitle="false">
 		<div id="page-wrapper">
 			<script src="header.js"></script>
 			<!-- Main -->
-			
 				<div class="wrapper style1">
-					
 					<div class="container">
 						<div class="row gtr-200" style="justify-content: center;">
-							<div class="col-12" id="content" style="max-width: 1200px; margin: 0 auto; float: none;">
-								
+							<div class="col-12" id="content" style="max-width: 1100px; margin: 0 auto; float: none;">
 								<article id="main">
-									
-									<img src="images/learn/wharton101.png" alt="Wharton 101 Fall Crash Course" style="display: block; margin: 20px auto; max-width: 100%; height: auto; border-radius: 10px;">
-									<p>
-										How to Survive Wharton is the ultimate crash course designed for understanding the intricacies of Penn’s business school. Over 7 weeks, we’ll break down everything you need to know to get ahead at Wharton and beyond: what careers in IB, PE, VC, and consulting actually look like, how recruiting works, how to read financial statements, and how companies are valued in the real world. From your first coffee chat to your first offer — IBEC’s got your back.
-									</p>
-<br><br><br>
-<h2 style="text-align: center;">Building Your Wharton Foundation</h2> 
-<div class="section-divider" style="height:2px; background:linear-gradient(to right, #bbb, #eee, #bbb); border-radius:1px; margin:40px 0 30px 0;"></div>
 
-										<header>
-											<h3 style="text-align:left">Academic Excellence</h3>
-										</header>
-										<h4>Course Selection Strategy</h4>
-										<ul>
-											<li><strong>Core Requirements:</strong> Complete your core courses early to maximize flexibility for electives</li>
-											<li><strong>Professor Research:</strong> Use Penn Course Review and talk to upperclassmen to identify the best professors</li>
-											<li><strong>Balanced Schedule:</strong> Mix quantitative and qualitative courses each semester</li>
-										</ul>
+<!-- Hero -->
+<div class="ifp-hero">
+	<span class="ifp-badge">8 &ndash; 10 Week Certificate Program</span>
+	<h2>Investment Foundations Program</h2>
+	<p>
+		IBEC's flagship educational initiative designed for committee and general body members alike. The IFP combines professional exposure, hands-on skill building, and real-world competition to give you a comprehensive foundation in finance &mdash; from your first accounting equation to your first live pitch in front of industry professionals.
+	</p>
+</div>
 
-										<h4>Study Strategies</h4>
-										<ul>
-											<li><strong>Study Groups:</strong> Form consistent study groups for challenging courses like Statistics and Accounting</li>
-											<li><strong>Office Hours:</strong> Attend professor and TA office hours regularly - they're underutilized resources</li>
-											<li><strong>Case Study Prep:</strong> For case-based courses, practice presenting and defending your analysis</li>
-										</ul>
-</section>
-<div class="section-divider" style="height:2px; background:linear-gradient(to right, #bbb, #eee, #bbb); border-radius:1px; margin:40px 0 30px 0;"></div>
+<div class="section-divider"></div>
 
-<section id="networking">
-										<header>
-											<h3>Networking & Professional Development</h3>
-										</header>
-										<ul>
-											<li><strong>Alumni Connections:</strong> Leverage the Wharton Alumni Network - schedule 15-20 minute coffee chats</li>
-											<li><strong>Professor Relationships:</strong> Build genuine relationships with professors in your areas of interest</li>
-											<li><strong>Peer Networks:</strong> Your classmates will be future business leaders - invest in these relationships</li>
-										</ul>
+<!-- Three Pillars -->
+<h2 style="text-align:center; font-size:1.5em; color:#1a1a2e; margin-bottom:5px;">Three Pillars of the IFP</h2>
+<p style="text-align:center; color:#666; font-size:0.95em; margin-top:0;">Each pillar builds on the last, taking you from industry awareness to hands-on execution.</p>
 
-										<h4>Career Preparation</h4>
-										<ul>
-											<li><strong>Career Services:</strong> Start using Career Services early, not just for recruiting season</li>
-											<li><strong>Resume Building:</strong> Quantify your achievements and tailor your resume for each industry</li>
-											<li><strong>Interview Prep:</strong> Practice behavioral and technical interviews with career services and peers</li>
-										</ul>
-</section>
-<div class="section-divider" style="height:2px; background:linear-gradient(to right, #bbb, #eee, #bbb); border-radius:1px; margin:40px 0 30px 0;"></div>
+<div class="pillar-cards">
+	<div class="pillar-card">
+		<div class="pillar-icon">&#9733;</div>
+		<h3>Professional Insights</h3>
+		<p>Workshops, podcasts, and speaker events from practitioners in Investment Banking, Consulting, Corporate Finance, Private Equity, and more.</p>
+	</div>
+	<div class="pillar-card">
+		<div class="pillar-icon">&#9881;</div>
+		<h3>Skill Development</h3>
+		<p>Hands-on training in Accounting, Financial Modeling, M&amp;A Analysis, Consulting Casing, and other foundational concepts that power the world of finance.</p>
+	</div>
+	<div class="pillar-card">
+		<div class="pillar-icon">&#9878;</div>
+		<h3>Competition &amp; Execution</h3>
+		<p>Put your skills to the test with stock pitches or consulting case presentations at our end-of-semester showcase, judged by alumni and industry professionals.</p>
+	</div>
+</div>
 
-									
-<section id="wellness">
-										<header>
-											<h3>Mental Health & Wellness</h3>
-										</header>
-										<h4>Stress Management</h4>
-										<ul>
-											<li><strong>Work-Life Balance:</strong> Set boundaries and make time for activities you enjoy</li>
-											<li><strong>Exercise:</strong> Use Penn's excellent fitness facilities - exercise reduces stress and improves focus</li>
-											<li><strong>Sleep Schedule:</strong> Maintain consistent sleep patterns, especially during busy periods</li>
-											<li><strong>Mindfulness:</strong> Practice meditation or mindfulness techniques to manage anxiety</li>
-										</ul>
+<div class="section-divider"></div>
 
-										<h4>Support Resources</h4>
-										<ul>
-											<li><strong>Counseling & Psychological Services (CAPS):</strong> Free counseling services for all Penn students</li>
-											<li><strong>Academic Support:</strong> Tutoring and writing centers are available for academic assistance</li>
-											<li><strong>Peer Support:</strong> Join support groups or find study buddies for accountability</li>
-										</ul>
-</section>
-<div class="section-divider" style="height:2px; background:linear-gradient(to right, #bbb, #eee, #bbb); border-radius:1px; margin:40px 0 30px 0;"></div>
+<!-- Detail Sections -->
+<div class="ifp-sections-wrapper">
 
-<section id="opportunities">
-										<header>
-											<h3>Maximizing Wharton Opportunities</h3>
-										</header>
-										<h4>Unique Programs</h4>
-										<ul>
-											<li><strong>Wharton International Program:</strong> Study abroad or participate in global consulting projects</li>
-											<li><strong>Venture Initiation Program (VIP):</strong> Launch your own startup with university support</li>
-											<li><strong>Research Opportunities:</strong> Work with professors on research projects in your areas of interest</li>
-											<li><strong>Leadership Ventures:</strong> Apply for leadership development programs and retreats</li>
-										</ul>
+	<div class="ifp-section">
+		<div class="ifp-section-header">
+			<div class="section-num" style="background:#007bff;">1</div>
+			<h3>Professional Insights</h3>
+		</div>
+		<p style="color:#555; line-height:1.65;">Gain firsthand exposure to the industries that drive global markets. Each week features a different format &mdash; keeping content fresh and engagement high.</p>
+		<div class="ifp-detail-grid">
+			<div class="ifp-detail-item">
+				<h4>Industry Workshops</h4>
+				<p>Interactive sessions led by IBEC committee members and guest speakers breaking down what careers in IB, Consulting, Corporate Finance, and VC/PE actually look like beyond the job description.</p>
+			</div>
+			<div class="ifp-detail-item">
+				<h4>Speaker Events</h4>
+				<p>Hear directly from analysts, associates, and senior professionals about recruiting timelines, day-in-the-life realities, and the skills that set top candidates apart.</p>
+			</div>
+			<div class="ifp-detail-item">
+				<h4>IBEC Podcast Series</h4>
+				<p>On-demand conversations with alumni and professionals covering market trends, career pivots, and lessons learned on the path from campus to Wall Street and beyond.</p>
+			</div>
+			<div class="ifp-detail-item">
+				<h4>Networking &amp; Coffee Chats</h4>
+				<p>Structured opportunities to connect with speakers after events, practice your elevator pitch, and begin building the professional relationships that define a successful career.</p>
+			</div>
+		</div>
+	</div>
 
-</section>
-<div class="section-divider" style="height:2px; background:linear-gradient(to right, #bbb, #eee, #bbb); border-radius:1px; margin:40px 0 30px 0;"></div>
+	<div class="ifp-section">
+		<div class="ifp-section-header">
+			<div class="section-num" style="background:#28a745;">2</div>
+			<h3>Skill Development</h3>
+		</div>
+		<p style="color:#555; line-height:1.65;">Move from theory to practice with structured modules that build the technical toolkit recruiters look for &mdash; regardless of which finance path you choose.</p>
+		<div class="ifp-detail-grid">
+			<div class="ifp-detail-item" style="border-left-color:#28a745;">
+				<h4>Accounting &amp; Financial Statements</h4>
+				<p>Master the income statement, balance sheet, and cash flow statement. Understand how the three statements link together and what they reveal about a company's health.</p>
+			</div>
+			<div class="ifp-detail-item" style="border-left-color:#28a745;">
+				<h4>Financial Modeling</h4>
+				<p>Build Excel-based models from the ground up &mdash; covering revenue builds, operating assumptions, and scenario analysis used in real investment decisions.</p>
+			</div>
+			<div class="ifp-detail-item" style="border-left-color:#28a745;">
+				<h4>M&amp;A &amp; Valuation</h4>
+				<p>Learn DCF, comparable companies, and precedent transactions. Evaluate whether a deal creates or destroys value and structure a persuasive investment thesis.</p>
+			</div>
+			<div class="ifp-detail-item" style="border-left-color:#28a745;">
+				<h4>Consulting Casing</h4>
+				<p>Practice market sizing, profitability analysis, and growth strategy frameworks. Develop structured thinking skills applicable to consulting interviews and case competitions.</p>
+			</div>
+		</div>
+	</div>
 
-<section id="resources">
-										<header>
-											<h3>Essential Resources</h3>
-										</header>
-										<h4>Academic Resources</h4>
-										<ul>
-											<li><strong>Wharton Computing:</strong> Access to Bloomberg terminals and financial databases</li>
-											<li><strong>Lippincott Library:</strong> Specialized business library with research support</li>
-											<li><strong>Career Services:</strong> Resume reviews, interview prep, and job search support</li>
-										</ul>
-</section>
-<div class="section-divider" style="height:2px; background:linear-gradient(to right, #bbb, #eee, #bbb); border-radius:1px; margin:40px 0 30px 0;"></div>
+	<div class="ifp-section">
+		<div class="ifp-section-header">
+			<div class="section-num" style="background:#fd7e14;">3</div>
+			<h3>Competition &amp; Execution</h3>
+		</div>
+		<p style="color:#555; line-height:1.65;">The program culminates in a live competition where you apply everything you've learned under real-world pressure and feedback.</p>
+		<div class="ifp-detail-grid">
+			<div class="ifp-detail-item" style="border-left-color:#fd7e14;">
+				<h4>Stock Pitch Track</h4>
+				<p>Research a publicly traded company, build a valuation model, and present a buy/sell/hold recommendation backed by rigorous fundamental analysis and a clear catalyst thesis.</p>
+			</div>
+			<div class="ifp-detail-item" style="border-left-color:#fd7e14;">
+				<h4>Consulting Case Track</h4>
+				<p>Tackle a real-world business problem, structure your analysis with proven frameworks, and deliver an actionable recommendation with quantitative and qualitative support.</p>
+			</div>
+			<div class="ifp-detail-item" style="border-left-color:#fd7e14;">
+				<h4>Alumni &amp; Professional Judges</h4>
+				<p>Present to panelists from top banks, consulting firms, and corporate finance teams. Receive direct, actionable feedback from professionals who evaluate pitches for a living.</p>
+			</div>
+			<div class="ifp-detail-item" style="border-left-color:#fd7e14;">
+				<h4>Awards &amp; Recognition</h4>
+				<p>Top-performing teams are recognized at the end-of-semester event. Outstanding presentations may be featured in IBEC publications and shared with our alumni network.</p>
+			</div>
+		</div>
+	</div>
 
-<section id="conclusion">
-										<header>
-											<h3>Final Thoughts</h3>
-										</header>
-										<p>
-											Success at Wharton isn't just about grades - it's about building relationships, developing skills, and positioning yourself for long-term career success. Take advantage of every opportunity, but remember to maintain balance and take care of your mental and physical health.
-										</p>
-										<p>
-											Remember: Your Wharton experience is what you make of it. Be proactive, stay curious, and don't be afraid to step outside your comfort zone. The connections you make and the skills you develop here will serve you throughout your career.
-										</p>
-<p style="margin-top: 30px;">
-											<strong>Questions about surviving Wharton? Reach out to IBEC members for advice and mentorship!</strong>
-										</p>
-									</section>
+</div>
 
-									
+<!-- Certificate Banner -->
+<div class="ifp-cert-banner">
+	<span class="cert-icon">&#127941;</span>
+	<h3>Earn Your IFP Certificate</h3>
+	<p>Complete the 8&ndash;10 week program and receive a certificate of completion from IBEC &mdash; a tangible credential that signals your commitment to professional development and financial literacy to future employers and peers.</p>
+</div>
+
+<p style="text-align:center; margin-top:30px; font-size:1.05em;">
+	<strong>Ready to build your foundation? Reach out to IBEC to learn more about enrollment and upcoming cohorts.</strong>
+</p>
+
 								</article>
 							</div>
 						</div>
@@ -154,7 +352,6 @@
 
 			<!-- Footer -->
 			<div id="footer">			
-				<!-- Copyright -->
 				<div class="copyright">
 					<ul class="menu">
 						<li>International Business and Economics Club, University of Pennsylvania, Philadelphia, PA. All rights reserved.</li>
@@ -165,7 +362,6 @@
 			</div>
 
 		</div>
-
 
 		<!-- Scripts -->
 			<script src="assets/js/jquery.min.js"></script>
