@@ -31,7 +31,13 @@ document.write(`
                        <li><a href="podcast.html">Podcast</a></li>
                    </ul>
                </li>
-            <li><a href="portfolio.html">Portfolio</a></li>
+            <li class="dropdown">
+                <a href="#">Portfolio</a>
+                <ul>
+                    <li><a href="portfolio.html">Live Portfolio</a></li>
+                    <li><a href="investment-committee.html">Investment Committee</a></li>
+                </ul>
+            </li>
             <li><a href="contact.html">Contact Us</a></li>
         </ul>
     </nav>
