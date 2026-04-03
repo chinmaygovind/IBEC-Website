@@ -185,7 +185,7 @@ input, select, textarea {
 	}
 
 	p {
-		text-align: justify;
+		text-align: left;
 	}
 
 	br.clear {
