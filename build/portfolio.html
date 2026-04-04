@@ -273,6 +273,17 @@
         -webkit-overflow-scrolling: touch;
       }
     }
+    .infographic { width: 100%; max-width: 900px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .section { padding: 30px; border-bottom: 1px solid #eee; }
+        .section:last-child { border-bottom: none; }
+        .section-title { text-align: center; color: #1a4a8d; font-size: 20px; font-weight: bold; margin: 0 0 5px 0; }
+        .section-subtitle { text-align: center; color: #666; font-size: 12px; margin: 0 0 25px 0; }
+        .cards-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 10px; }
+        .card { background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; padding: 20px 10px; text-align: center; }
+        .card .value { font-size: 24px; font-weight: bold; color: #1a4a8d; margin-bottom: 5px; }
+        .card .label { font-size: 12px; color: #666; font-weight: bold; text-transform: uppercase; }
+        .chart-box { position: relative; width: 100%; }
+        .split-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
   </style>
 </head>
 <body class="no-sidebar is-preload" data-header-title="Portfolio" data-header-image="images/portfolio/header.png" data-header-hr="false" data-header-subtitle="false">
@@ -285,59 +296,67 @@
       <div id="errorMessage" class="error" style="display: none;"></div>
       
       <div id="portfolioContent" style="display: none;">
-        <div class="portfolio-container">
-          <div class="summary-cards">
-            <div class="summary-card">
-              <h3>Initial Capital</h3>
-              <p class="value" id="initialCapital">$100,000</p>
+        <div class="infographic">
+            
+            <div class="section" style="background-color: #f8faff;">
+                <h2 class="section-title">Live Portfolio Performance</h2>
+                <div class="cards-container">
+                    <div class="card"><div class="value" id="initialCapital">$100,000</div><div class="label">Initial Capital</div></div>
+                    <div class="card"><div class="value" id="currentValue">$0</div><div class="label">Current Value</div></div>
+                    <div class="card"><div class="value" id="totalReturn" style="color: #10b981;">0%</div><div class="label">Total Return</div></div>
+                    <div class="card"><div class="value" id="profitLoss" style="color: #10b981;">$0</div><div class="label">Profit / Loss</div></div>
+                </div>
+                <div style="text-align: center; margin-bottom: 10px; color: #666; font-size: 12px;">
+                  <span id="lastUpdated">Prices updated: Loading...</span>
+                </div>
             </div>
-            <div class="summary-card">
-              <h3>Current Value</h3>
-              <p class="value" id="currentValue">$0</p>
-            </div>
-            <div class="summary-card">
-              <h3>Total Return</h3>
-              <p class="value" id="totalReturn">0%</p>
-            </div>
-            <div class="summary-card">
-              <h3>Profit/Loss</h3>
-              <p class="value" id="profitLoss">$0</p>
-            </div>
-          </div>
-          
-          
-          <div class="chart-container">
-            <canvas id="portfolioChart"></canvas>
-          </div>
-          
-          <div style="text-align: center; margin-bottom: 20px; color: #666;">
-            <small id="lastUpdated">Prices updated: Loading...</small>
-          </div>
 
-          <div class="holdings-table-wrapper">
-            <table class="holdings-table">
-              <thead>
-                <tr>
-                  <th>Company</th>
-                  <th>Shares</th>
-                  <th>Initial Purchase Date</th>
-                  <th>Avg Purchase Price</th>
-                  <th>Current Price</th>
-                  <th>Market Value</th>
-                  <th>P&L</th>
-                  <th>Return %</th>
-                </tr>
-              </thead>
-              <tbody id="holdingsTableBody">
-              </tbody>
-            </table>
-          </div>
-          
+            <div class="section">
+                <h2 class="section-title">Performance Over Time</h2>
+                <div class="chart-box" style="height: 350px;">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+            </div>
+
+            <div class="section" style="background-color: #f8faff;">
+                <h2 class="section-title">Current Holdings Ledger</h2>
+                <div class="holdings-table-wrapper" style="margin-top: 20px;">
+                    <table class="holdings-table">
+                        <thead>
+                            <tr>
+                                <th>Company</th><th>Shares</th><th>Purchase Date</th><th>Avg Price</th><th>Current Price</th><th>Market Value</th><th>P&L</th><th>Return %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="holdingsTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Strategic Blueprint vs Current Allocation</h2>
+                <p class="section-subtitle">Comparing long-term Strategic Asset Allocation targets against current positioning.</p>
+                <div class="chart-box" style="height: 250px; width: 80%; margin: 0 auto;">
+                    <canvas id="allocationChart"></canvas>
+                </div>
+            </div>
+
+            <div class="section" style="background-color: #f8faff;">
+                <h2 class="section-title">Geographic Diversification</h2><br>
+                <div class="split-section">
+                    <div>
+                        <h3 style="text-align: center; font-size: 14px; color: #1a4a8d;">Equity Portfolio: Regional Breakdown</h3>
+                        <div class="chart-box" style="height: 220px;"><canvas id="geoDonutChart"></canvas></div>
+                    </div>
+                    <div>
+                        <h3 style="text-align: center; font-size: 14px; color: #1a4a8d;">Future Regional Equity Targets</h3>
+                        <div class="chart-box" style="height: 220px;"><canvas id="geoBarChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
       </div>
-    
-    <img style="margin: auto; width: 100%;" src="images/portfolio/sebastian.jpg" alt="Sebastian" style="max-width:350px;width:100%;height:auto;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
-  
     </div>
 
     <div id="footer">
@@ -353,6 +372,45 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    // live infographic
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#666';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        new Chart(document.getElementById('allocationChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Equities', 'Bonds', 'Alternatives', 'Cash'],
+                datasets: [
+                    { label: 'Strategic Target', data: [60, 25, 10, 5], backgroundColor: '#86b7fe', borderRadius: 4 },
+                    { label: 'Current Allocation', data: [88.5, 4.5, 0, 7.0], backgroundColor: '#1a4a8d', borderRadius: 4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        new Chart(document.getElementById('geoDonutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['North America', 'Latin America', 'East Asia', 'Europe', 'South Asia'],
+                datasets: [{ data: [62.5, 12.5, 9.7, 8.8, 6.5], backgroundColor: ['#1a4a8d', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '65%' }
+        });
+
+        new Chart(document.getElementById('geoBarChart'), {
+            type: 'bar',
+            data: {
+                labels: ['North America', 'East Asia', 'Europe', 'Latin America', 'South Asia', 'MEA'],
+                datasets: [
+                    { label: 'Current Allocation', data: [62.5, 9.7, 8.8, 12.5, 6.5, 0], backgroundColor: '#3b82f6', borderRadius: 3 },
+                    { label: 'Target Allocation', data: [30, 20, 20, 10, 15, 5], backgroundColor: '#1a4a8d', borderRadius: 3 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 80 } } }
+        });
+    });
+    // old AWS architecture
     let portfolioChart = null;
     const INITIAL_CAPITAL = 100000;
 
