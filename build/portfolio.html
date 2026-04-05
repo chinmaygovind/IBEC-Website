@@ -296,6 +296,71 @@
     .text-purple { color: #8b5cf6 !important; }
     .text-blue { color: #3b82f6 !important; }
 
+    /* NEW: SEC Filing Style Snapshot Section */
+    .sec-filing-container {
+      background: #ffffff;
+      border: 3px solid #000000;
+      padding: 40px 30px;
+      margin: 30px auto;
+      font-family: "Times New Roman", Times, serif; /* Formal SEC font */
+      max-width: 800px;
+      color: #000;
+    }
+    .sec-filing-header {
+      text-align: center;
+      border-bottom: 2px solid #000;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+    .sec-filing-title {
+      font-size: 22px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+      color: #000;
+    }
+    .sec-filing-subtitle {
+      font-size: 14px;
+      font-style: italic;
+      margin-top: 5px;
+    }
+    .sec-filing-text {
+      text-align: justify;
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+    .snapshot-link-wrapper {
+      display: block;
+      text-align: center;
+      margin: 0 auto;
+      transition: opacity 0.2s ease;
+    }
+    .snapshot-link-wrapper:hover {
+      opacity: 0.85; /* Slight fade on hover to indicate it's clickable */
+    }
+    .snapshot-image {
+      width: 100%;
+      max-width: 600px; /* Limits size on large screens */
+      height: auto;
+      border: 1px solid #000;
+      box-shadow: 4px 4px 0px rgba(0,0,0,0.1); /* Harder, more document-like shadow */
+      margin: 0 auto;
+      display: block;
+    }
+    .pdf-caption {
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 15px;
+      text-transform: uppercase;
+    }
+    .pdf-caption a {
+      color: #0000EE;
+      text-decoration: underline;
+    }
+
     /* Table responsiveness for very small screens */
     @media screen and (max-width: 600px) {
       .holdings-table-wrapper {
@@ -360,6 +425,25 @@
                         <tbody id="holdingsTableBody">
                             </tbody>
                     </table>
+                </div>
+            </div>
+
+          <div class="sec-filing-container">
+                <div class="sec-filing-header">
+                    <h2 class="sec-filing-title">EXHIBIT A: Strategic Overview Snapshot</h2>
+                    <div class="sec-filing-subtitle">Pursuant to IBEC Investment Committee Guidelines</div>
+                </div>
+                
+                <p class="sec-filing-text">
+                    <strong>Item 1. Strategic Visual Abstract.</strong> The following infographic represents the official structural overview, disciplined methodology, and long-term strategic goals of the portfolio. Click the exhibit below to view the full-resolution document for archival purposes.
+                </p>
+                
+                <a href="images/portfolio/sebastian.jpg" target="_blank" class="snapshot-link-wrapper">
+                    <img src="images/portfolio/sebastian.jpg" alt="IBEC Strategic Overview Snapshot" class="snapshot-image">
+                </a>
+                
+                <div class="pdf-caption">
+                    <a href="images/portfolio/sebastian.jpg" target="_blank">View Full Image [Original Size]</a>
                 </div>
             </div>
 
