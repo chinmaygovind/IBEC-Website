@@ -595,18 +595,26 @@
             options: { 
                 responsive: true, 
                 maintainAspectRatio: false, 
-                scales: { y: { beginAtZero: true, max: 100 } },
+                scales: { y: { beginAtZero: true, max: 100 } }, // Adjust max based on chart
                 plugins: {
-                    // This forces the numbers to show on the bars
+                    // Here is your single datalabels block
                     datalabels: {
-                        color: '#ffffff',
                         font: { weight: 'bold', size: 11 },
                         formatter: function(value) {
-                            return value > 0 ? value + '%' : ''; // Adds the % sign visually, hides 0%
+                            return value > 0 ? value + '%' : '';
                         },
                         anchor: 'end',
-                        align: 'bottom',
-                        offset: 4
+                        offset: 4,
+                        // Dynamic Alignment: Outside for small bars, Inside for large bars
+                        align: function(context) {
+                            var value = context.dataset.data[context.dataIndex];
+                            return value < 15 ? 'top' : 'bottom';
+                        },
+                        // Dynamic Color: Dark gray outside, White inside
+                        color: function(context) {
+                            var value = context.dataset.data[context.dataIndex];
+                            return value < 15 ? '#475569' : '#ffffff'; 
+                        }
                     }
                 }
             }
