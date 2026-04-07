@@ -447,8 +447,8 @@
                             <tr style="border-bottom: 1px solid #ddd; background: #fff;">
                                 <td style="padding: 12px 10px; vertical-align: top; border: none;">13F-HR</td>
                                 <td style="padding: 12px 10px; vertical-align: top; border: none;">
-                                    <a href="images/portfolio/sebastian.pdf" target="_blank" style="color: #cc0000; text-decoration: none; margin-right: 2px;">[html]</a>
-                                    <a href="images/portfolio/sebastian.pdf" target="_blank" style="color: #cc0000; text-decoration: none;">[text]</a>
+                                    <a href="images/portfolio/sebastian" target="_blank" style="color: #cc0000; text-decoration: none; margin-right: 2px;">[html]</a>
+                                    <a href="images/portfolio/sebastian.jpg" target="_blank" style="color: #cc0000; text-decoration: none;">[text]</a>
                                 </td>
                                 <td style="padding: 12px 10px; vertical-align: top; border: none;">
                                     <a href="images/portfolio/sebastian.pdf" target="_blank" style="color: #cc0000; text-decoration: underline; font-size: 14px;">International Business and Economics Club (0001845920) (Filed by)</a><br>
@@ -1028,7 +1028,12 @@
         data:{labels:sampledDates,datasets:[{label:'Portfolio Value',data:sampledValues,borderColor:'#007bff',backgroundColor:'rgba(0,123,255,0.1)',borderWidth:2,tension:0.1,fill:true}]},
         options:{responsive:true,maintainAspectRatio:false,
           scales:{x:{title:{display:true,text:'Date'}},y:{title:{display:true,text:'Portfolio Value ($)'}}},
-          plugins:{title:{display:true,text:'Portfolio Performance Over Time',font:{size:16}},legend:{display:true}},datalabels:{display:false}
+          plugins:{
+             title:{display:true,text:'Portfolio Performance Over Time',font:{size:16}},
+             legend:{display:true},
+             // ADD THIS LINE TO HIDE THE MESS:
+             datalabels: { display: false } 
+          }
         }
       });
     }
