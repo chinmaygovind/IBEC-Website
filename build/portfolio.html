@@ -783,7 +783,9 @@
         body: JSON.stringify({ tickers, period1, period2 })
       });
       if(!r.ok) throw new Error(`Bulk fetch failed: HTTP ${r.status}`);
-      const body = await r.json();
+      const rawText = await r.text();
+      const safeText = rawText.replace(/\bNaN\b/g, 'null'); 
+      const body = JSON.parse(safeText);
 
       const toYMD = s => {
         const d = new Date(s * 1000);
