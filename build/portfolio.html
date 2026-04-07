@@ -631,13 +631,15 @@
                 maintainAspectRatio: false, 
                 cutout: '65%',
                 plugins: {
-                    // This puts the numbers on the pie slices
                     datalabels: {
                         color: '#ffffff',
                         font: { weight: 'bold', size: 12 },
                         formatter: function(value) {
                             return value + '%'; 
-                        }
+                        },
+                        // Force the labels to center perfectly inside the slices
+                        anchor: 'center', 
+                        align: 'center'   
                     }
                 }
             }
@@ -658,17 +660,24 @@
                 scales: { y: { beginAtZero: true, max: 80 } },
                 plugins: {
                     datalabels: {
-                        color: '#ffffff',
                         font: { weight: 'bold', size: 10 },
                         formatter: function(value) {
                             return value > 0 ? value + '%' : '';
                         },
                         anchor: 'end',
-                        align: 'bottom',
-                        offset: 4
+                        offset: 4,
+                        // Dynamic Alignment: Outside for small bars, Inside for large bars
+                        align: function(context) {
+                            var value = context.dataset.data[context.dataIndex];
+                            return value < 15 ? 'top' : 'bottom';
+                        },
+                        // Dynamic Color: Dark gray outside, White inside
+                        color: function(context) {
+                            var value = context.dataset.data[context.dataIndex];
+                            return value < 15 ? '#475569' : '#ffffff'; 
+                        }
                     }
                 }
-            }
         });
     });
     // old AWS architecture
