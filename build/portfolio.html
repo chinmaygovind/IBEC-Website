@@ -428,22 +428,39 @@
                 </div>
             </div>
 
-          <div class="sec-filing-container">
-                <div class="sec-filing-header">
-                    <h2 class="sec-filing-title">EXHIBIT A: Strategic Overview Snapshot</h2>
-                    <div class="sec-filing-subtitle">Pursuant to IBEC Investment Committee Guidelines</div>
-                </div>
+          <div class="section" style="background-color: #f8faff;">
+                <h2 class="section-title">Strategic Overview Snapshots</h2>
+                <p class="section-subtitle">Official Holdings Reports (Form 13F-HR)</p>
                 
-                <p class="sec-filing-text">
-                    <strong>Item 1. Strategic Visual Abstract.</strong> The following infographic represents the official structural overview, disciplined methodology, and long-term strategic goals of the portfolio. Click the exhibit below to view the full-resolution document for archival purposes.
-                </p>
-                
-                <a href="images/portfolio/sebastian.jpg" target="_blank" class="snapshot-link-wrapper">
-                    <img src="images/portfolio/sebastian.jpg" alt="IBEC Strategic Overview Snapshot" class="snapshot-image">
-                </a>
-                
-                <div class="pdf-caption">
-                    <a href="images/portfolio/sebastian.jpg" target="_blank">View Full Image [Original Size]</a>
+                <div style="overflow-x: auto; margin-top: 20px;">
+                    <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 13px; background: transparent; border: none;">
+                        <thead>
+                            <tr style="background-color: #dcdcdc; color: #333; font-weight: bold; text-align: left;">
+                                <th style="padding: 8px 10px; border: none;">Form</th>
+                                <th style="padding: 8px 10px; border: none;">Formats</th>
+                                <th style="padding: 8px 10px; border: none;">Description</th>
+                                <th style="padding: 8px 10px; border: none;">Accepted</th>
+                                <th style="padding: 8px 10px; border: none;">Filing Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #ddd; background: #fff;">
+                                <td style="padding: 12px 10px; vertical-align: top; border: none;">13F-HR</td>
+                                <td style="padding: 12px 10px; vertical-align: top; border: none;">
+                                    <a href="images/portfolio/sebastian.pdf" target="_blank" style="color: #cc0000; text-decoration: none; margin-right: 2px;">[html]</a>
+                                    <a href="images/portfolio/sebastian.pdf" target="_blank" style="color: #cc0000; text-decoration: none;">[text]</a>
+                                </td>
+                                <td style="padding: 12px 10px; vertical-align: top; border: none;">
+                                    <a href="images/portfolio/sebastian.pdf" target="_blank" style="color: #cc0000; text-decoration: underline; font-size: 14px;">International Business and Economics Club (0001845920) (Filed by)</a><br>
+                                    <span style="font-size: 11px; color: #666; line-height: 1.6;">
+                                        Statement of Portfolio Holdings and Strategic Allocations
+                                    </span>
+                                </td>
+                                <td style="padding: 12px 10px; vertical-align: top; border: none;">2025-09-24<br>16:30:11</td>
+                                <td style="padding: 12px 10px; vertical-align: top; border: none;">2025-09-24</td>
+                            </tr>
+                            </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -556,22 +573,44 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
   <script>
     // live infographic
     Chart.defaults.font.family = "'Inter', sans-serif";
     Chart.defaults.color = '#666';
 
     document.addEventListener('DOMContentLoaded', () => {
+        // 1. Register the datalabels plugin
+        Chart.register(ChartDataLabels);
+
         new Chart(document.getElementById('allocationChart'), {
             type: 'bar',
             data: {
                 labels: ['Equities', 'Bonds', 'Alternatives', 'Cash'],
                 datasets: [
+                    // REMOVED the % signs here to fix the JavaScript syntax error
                     { label: 'Strategic Target', data: [60, 25, 10, 5], backgroundColor: '#86b7fe', borderRadius: 4 },
                     { label: 'Current Allocation', data: [88.5, 4.5, 0, 7.0], backgroundColor: '#1a4a8d', borderRadius: 4 }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                scales: { y: { beginAtZero: true, max: 100 } },
+                plugins: {
+                    // This forces the numbers to show on the bars
+                    datalabels: {
+                        color: '#ffffff',
+                        font: { weight: 'bold', size: 11 },
+                        formatter: function(value) {
+                            return value > 0 ? value + '%' : ''; // Adds the % sign visually, hides 0%
+                        },
+                        anchor: 'end',
+                        align: 'bottom',
+                        offset: 4
+                    }
+                }
+            }
         });
 
         new Chart(document.getElementById('geoDonutChart'), {
@@ -580,7 +619,21 @@
                 labels: ['North America', 'Latin America', 'East Asia', 'Europe', 'South Asia'],
                 datasets: [{ data: [62.5, 12.5, 9.7, 8.8, 6.5], backgroundColor: ['#1a4a8d', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'] }]
             },
-            options: { responsive: true, maintainAspectRatio: false, cutout: '65%' }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                cutout: '65%',
+                plugins: {
+                    // This puts the numbers on the pie slices
+                    datalabels: {
+                        color: '#ffffff',
+                        font: { weight: 'bold', size: 12 },
+                        formatter: function(value) {
+                            return value + '%'; 
+                        }
+                    }
+                }
+            }
         });
 
         new Chart(document.getElementById('geoBarChart'), {
@@ -592,7 +645,23 @@
                     { label: 'Target Allocation', data: [30, 20, 20, 10, 15, 5], backgroundColor: '#1a4a8d', borderRadius: 3 }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 80 } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                scales: { y: { beginAtZero: true, max: 80 } },
+                plugins: {
+                    datalabels: {
+                        color: '#ffffff',
+                        font: { weight: 'bold', size: 10 },
+                        formatter: function(value) {
+                            return value > 0 ? value + '%' : '';
+                        },
+                        anchor: 'end',
+                        align: 'bottom',
+                        offset: 4
+                    }
+                }
+            }
         });
     });
     // old AWS architecture
