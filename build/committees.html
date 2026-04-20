@@ -1,397 +1,231 @@
-<!DOCTYPE HTML>
-<!--
-	Helios by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
-<html>
-	<head>
-		<title>IBEC - Committees</title>
-		<link rel="icon" type="image/x-icon" href="images/ibec.ico">
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-		<style>
-			/* Base styles for all screen sizes */
-			.row.gtr-200 {
-				display: flex !important;
-				align-items: center !important;
-				justify-content: center !important;
-				margin: 0 auto !important;
-				width: 100% !important;
-			}
-			
-			#committee-carousel {
-				display: flex !important;
-				flex-direction: column !important;
-				align-items: center !important;
-				justify-content: center !important;
-				margin: 0 auto !important;
-			}
-			
-			#carousel-card-wrapper {
-				display: flex !important;
-				flex-direction: column !important;
-				align-items: center !important;
-				justify-content: center !important;
-				margin: 0 auto !important;
-			}
-			
-			#carousel-card {
-				margin: 0 auto !important;
-				text-align: center !important;
-			}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Committees — WIBEC</title>
+<link rel="icon" type="image/x-icon" href="images/ibec.ico">
+</head>
+<body class="page-enter">
+<script src="header.js"></script>
 
-			/* Desktop styles (default) */
-			@media screen and (min-width: 769px) {
-				.row.gtr-200 {
-					min-height: 70vh !important;
-					padding: 0 !important;
-				}
-				
-				#committee-carousel {
-					width: 100% !important;
-					max-width: 1200px !important;
-					padding: 0 20px !important;
-				}
-				
-				#carousel-card-wrapper {
-					width: 100% !important;
-					max-width: 900px !important;
-				}
-				
-				#carousel-card {
-					width: 100% !important;
-					max-width: 900px !important;
-					padding: 40px 32px !important;
-					min-height: 420px !important;
-					border-radius: 24px !important;
-				}
-				
-				.carousel-nav-buttons {
-					position: absolute !important;
-					top: 50% !important;
-					left: 0 !important;
-					right: 0 !important;
-					transform: translateY(-50%) !important;
-					display: flex !important;
-					justify-content: space-between !important;
-					pointer-events: none !important;
-				}
-				
-				.carousel-btn {
-					pointer-events: auto !important;
-					padding: 16px 32px !important;
-					font-size: 1.3em !important;
-				}
-				
-				#carousel-prev-btn {
-					margin-left: 24px !important;
-				}
-				
-				#carousel-next-btn {
-					margin-right: 24px !important;
-				}
-			}
+<div class="ticker-inject"></div>
 
-			/* Mobile responsive styles for committees page */
-			@media screen and (max-width: 768px) {
-				.row.gtr-200 {
-					min-height: auto !important;
-					padding: 20px 0 !important;
-				}
-				
-				#committee-carousel {
-					width: 100% !important;
-					max-width: 100% !important;
-					padding: 0 15px !important;
-				}
-				
-				#carousel-card-wrapper {
-					min-width: 100% !important;
-					width: 100% !important;
-				}
-				
-				#carousel-card {
-					padding: 20px 16px !important;
-					min-height: 360px !important;
-					max-width: calc(100vw - 30px) !important;
-					width: 100% !important;
-				}
-				
-				.carousel-nav-buttons {
-					position: static !important;
-					transform: none !important;
-					margin-top: 20px !important;
-					justify-content: center !important;
-					gap: 20px !important;
-					width: 100% !important;
-					display: flex !important;
-				}
-				
-				.carousel-btn {
-					padding: 12px 24px !important;
-					font-size: 1.1em !important;
-					margin: 0 !important;
-				}
-				
-				.committee-image {
-					max-width: 100% !important;
-					margin: 0 auto 16px auto !important;
-					display: block !important;
-				}
-				
-				.committee-title {
-					font-size: 1.2em !important;
-					margin-bottom: 12px !important;
-					text-align: center !important;
-				}
-				
-				.committee-desc {
-					font-size: 0.9em !important;
-					max-width: 100% !important;
-					padding: 0 !important;
-					text-align: center !important;
-				}
-				
-				.carousel-indicators {
-					bottom: 10px !important;
-					gap: 8px !important;
-					justify-content: center !important;
-				}
-				
-				.carousel-indicator {
-					width: 24px !important;
-					height: 4px !important;
-				}
-			}
-			
-			@media screen and (max-width: 480px) {
-				.row.gtr-200 {
-					min-height: auto !important;
-					padding: 15px 0 !important;
-					margin: 0 !important;
-					justify-content: center !important;
-				}
-				
-				#committee-carousel {
-					padding: 0 10px !important;
-				}
-				
-				#carousel-card {
-					padding: 16px 12px !important;
-					margin: 0 auto !important;
-					min-height: 320px !important;
-					border-radius: 16px !important;
-					max-width: calc(100vw - 20px) !important;
-					width: 100% !important;
-				}
-				
-				.committee-image {
-					border-radius: 16px !important;
-					margin: 0 auto 12px auto !important;
-				}
-				
-				.committee-title {
-					font-size: 1.1em !important;
-					margin-bottom: 8px !important;
-					text-align: center !important;
-				}
-				
-				.committee-desc {
-					font-size: 0.85em !important;
-					line-height: 1.4 !important;
-					text-align: center !important;
-				}
-				
-				.carousel-btn {
-					padding: 10px 20px !important;
-					font-size: 1em !important;
-				}
-				
-				.carousel-nav-buttons {
-					margin-top: 15px !important;
-				}
-			}
-		</style>
-	</head>
-	<body class="right-sidebar is-preload">
-	<body class="left-sidebar is-preload" data-header-title="Committees" data-header-image="images/committees/header.webp" data-header-hr="false" data-header-subtitle="false">
-		<div id="page-wrapper">
-			<script src="header.js"></script>
-			<!-- Main -->
-				<div class="wrapper style1">
-
-					<div class="container">
-
-<div class="row gtr-200" style="min-height: 70vh; display: flex; align-items: center; justify-content: center; margin: 0; width: 100%;">
-  <div class="col-12" id="committee-carousel" style="width: 100%; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
-	<div id="carousel-card-wrapper" style="flex: 1; width: 100%; max-width: 900px; min-width: 340px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
-	  <div id="carousel-card" style="width: 100%; max-width: 900px; text-align: center; background: #fff; border-radius: 24px; box-shadow: 0 4px 32px #bbb8; padding: 40px 32px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; opacity: 1; transition: opacity 0.5s; position: relative; min-height: 420px;">
-		<!-- JS will inject committee card here -->
-	  </div>
-	  <div class="carousel-nav-buttons" style="width: 100%; display: flex; justify-content: space-between; align-items: center; position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); pointer-events: none;">
-		<button id="carousel-prev-btn" class="carousel-btn" style="pointer-events: auto; background: linear-gradient(90deg, #41bcea 60%, #18B6C9 100%); color: #fff; border: none; border-radius: 8px; padding: 16px 32px; font-size: 1.3em; font-weight: 600; box-shadow: 0 2px 8px #41bcea33; cursor: pointer; margin-left: 24px; transition: background 0.2s, transform 0.2s; outline: none;" aria-label="Previous" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">&#10094;</button>
-		<button id="carousel-next-btn" class="carousel-btn" style="pointer-events: auto; background: linear-gradient(90deg, #41bcea 60%, #18B6C9 100%); color: #fff; border: none; border-radius: 8px; padding: 16px 32px; font-size: 1.3em; font-weight: 600; box-shadow: 0 2px 8px #41bcea33; cursor: pointer; margin-right: 24px; transition: background 0.2s, transform 0.2s; outline: none;" aria-label="Next" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">&#10095;</button>
-	  </div>
-	</div>
+<!-- Page Header -->
+<section style="padding:64px 0 40px; border-bottom:1px solid var(--rule)">
+  <div class="container-wide">
+    <div class="page-header-meta">
+      <span>§ Regional Committees</span>
+      <span>Spring 2026 · Active</span>
+      <span>8 committees · 124 analysts</span>
+    </div>
+    <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:64px; align-items:end">
+      <h1 class="display" style="font-size:clamp(56px,7vw,108px); margin:0">
+        Eight regions. <em style="color:var(--coral-ink)">One</em> mandate.
+      </h1>
+      <p class="serif" style="font-size:18px; font-style:italic; color:var(--ink-700); margin:0">
+        Each committee covers a distinct geography — tracking macro developments, monitoring sectors, and building the case for every position the fund takes.
+      </p>
+    </div>
   </div>
-</div>
-<script>
-const committees = [
-  {
-	img: 'images/committees/north_america.avif',
-	title: 'North American Committee',
-	desc: 'Analyzes major events and general market movements in North America. Current events that will impact analysis include current political developments and the growth of American fintech startups.',
-	link: 'https://docs.google.com/forms/d/e/1FAIpQLSf-C74e_W4XGmRM3diBmtpQUkzZNciLK5OhuEkQcAJdpYr0Zg/viewform?usp=header',
-	anchor: '#nac'
-  },
-  {
-	img: 'images/committees/latin_america.jpg',
-	title: 'Latin American Committee',
-	desc: 'Analyzes major events and general market movements within Latin America. Analysis will be structured around developments in administration change and their effects on the economies in Central and South America.',
-	link: 'https://docs.google.com/forms/d/e/1FAIpQLSdbNJJEoJoEgbXpA2lGw4lwqLkJCfTCu7aEou2F_uY6rLtzog/viewform?usp=header',
-	anchor: '#lac'
-  },
-  {
-	img: 'images/committees/europe.jpg',
-	title: 'European Committee',
-	desc: 'Analyzes major events and general market movements within Europe, both EU and non-EU members. Focus will be on the British stock market, EU policies and regulations, and current conflicts.',
-	link: 'https://docs.google.com/forms/d/e/1FAIpQLSe1cqN5uceMYmESzrU8-cJZFrSF0f4ac3C4ZpFdn57be3bGaA/viewform?usp=header',
-	anchor: '#euc'
-  },
-  {
-	img: 'images/committees/east_asia.jpg',
-	title: 'East Asian Committee',
-	desc: 'Analyzes major events and general market movements primarily within East Asia. Japan’s Nikkei, Taiwan’s semiconductor industry, and China’s massive volume of trade with the US are significant items.',
-	link: 'https://docs.google.com/forms/d/e/1FAIpQLSdEV68W15sLOHav-jRJmDp6PNH94gTsV2kooudOzwEK6s7A5w/viewform?usp=header',
-	anchor: '#eac'
-  },
-  {
-	img: 'images/committees/south_asia.jpg',
-	title: 'South Asian Committee',
-	desc: 'Analyzes major events and general market movements in South Asia. India’s role as an increasingly important trade partner of the US and Europe will be given a great deal of focus.',
-	link: 'https://docs.google.com/forms/d/e/1FAIpQLSfTf6CPjSfgvZ31o1ObIMlR-TDRCfR1O3AMxKd4Nfc53Y13_g/viewform?usp=header',
-	anchor: '#sac'
-  },
-  {
-	img: 'images/committees/middle_east.jpg',
-	title: 'Middle Eastern & African Committee',
-	desc: 'Analyzes events occuring in the Middle East. This committee is especially focused on current developing regional conflicts, international relations, and energy industries.',
-	link: 'https://docs.google.com/forms/d/e/1FAIpQLSeB_5aLy0b6dLhLfWmaK_lBLBnidkwAMIOfVao0J1qRbK6n2A/viewform?usp=header',
-	anchor: '#mec'
-  },
-  {
-	img: 'images/committees/corporate.png',
-	title: 'Corporate Outreach and Engagement Committee',
-	desc: 'Builds and maintains relationships with firms, alumni, and professionals to expand opportunities for members. Leads outreach initiatives that enhances IBEC´s visibility in the corporate world.',
-	link: 'https://docs.google.com/forms/d/e/1FAIpQLScOH1Ybc8U5S2nj9JaRhnwpep0x6ISe0_Yxr3zRuCdJz6PLRA/viewform?usp=header',
-	anchor: '#coc'
-  }
-];
-let current = 0;
-function renderCommittee(idx, fade = false) {
-  const c = committees[idx];
-  const card = document.getElementById('carousel-card');
-  if (fade) {
-	card.style.opacity = 0;
-	setTimeout(() => {
-	  card.innerHTML = `
-		<div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
-		  <div class="committee-image" style="width: 100%; max-width: 540px; aspect-ratio: 16/9; overflow: hidden; border-radius: 24px; box-shadow: 0 4px 32px #41bcea33; margin-bottom: 18px;">
-			<img src="${c.img}" alt="${c.title}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-		  </div>
-		  <h2 class="committee-title" style="margin-bottom: 10px; color: #1A4CA3; font-size: 1.35em; font-weight: 700; letter-spacing: 0.01em;">${c.title}</h2>
-		  <p class="committee-desc" style="font-size: 1em; color: #222; margin-bottom: 12px; line-height: 1.45; max-width: 420px;">${c.desc} 
-			<br><br>
-		  <div id="carousel-indicators" class="carousel-indicators" style="position: absolute; left: 0; right: 0; bottom: 18px; display: flex; justify-content: center; align-items: center; gap: 12px;"></div>
-		</div>
-	  `;
-	  card.style.opacity = 1;
-	  renderIndicators(idx);
-	}, 250);
-  } else {
-	card.innerHTML = `
-	  <div style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
-		<div style="width: 100%; max-width: 540px; aspect-ratio: 16/9; overflow: hidden; border-radius: 24px; box-shadow: 0 4px 32px #41bcea33; margin-bottom: 18px;">
-		  <img src="${c.img}" alt="${c.title}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-		</div>
-		<h2 style="margin-bottom: 10px; color: #1A4CA3; font-size: 1.35em; font-weight: 700; letter-spacing: 0.01em;">${c.title}</h2>
-		<p style="font-size: 1em; color: #222; margin-bottom: 12px; line-height: 1.45; max-width: 420px;">${c.desc} 
-			<br><br>
-		<div id="carousel-indicators" style="position: absolute; left: 0; right: 0; bottom: 18px; display: flex; justify-content: center; align-items: center; gap: 12px;"></div>
-	  </div>
-	`;
-	card.style.opacity = 1;
-	renderIndicators(idx);
-  }
-  // Render indicators inside the card
-  function renderIndicators(idx) {
-	const indicators = card.querySelector('#carousel-indicators');
-	indicators.innerHTML = '';
-	for (let i = 0; i < committees.length; i++) {
-	  const dot = document.createElement('span');
-	  dot.className = 'carousel-indicator';
-	  dot.style.width = '32px';
-	  dot.style.height = '6px';
-	  dot.style.borderRadius = '3px';
-	  dot.style.display = 'inline-block';
-	  dot.style.margin = '0 4px';
-	  dot.style.background = i === idx ? 'linear-gradient(90deg, #41bcea 60%, #18B6C9 100%)' : '#eee';
-	  dot.style.transition = 'background 0.2s';
-	  dot.style.cursor = 'pointer';
-	  dot.onclick = () => {
-		current = i;
-		renderCommittee(current, true);
-	  };
-	  indicators.appendChild(dot);
-	}
-  }
-}
-document.addEventListener('DOMContentLoaded', function() {
-  renderCommittee(current);
-  document.getElementById('carousel-prev-btn').onclick = function() {
-	current = (current - 1 + committees.length) % committees.length;
-	renderCommittee(current, true);
-  };
-  document.getElementById('carousel-next-btn').onclick = function() {
-	current = (current + 1) % committees.length;
-	renderCommittee(current, true);
-  };
-});
-</script>
+</section>
 
-				</div>
-			</div>
-			<br>
-			<br>
-			<br>
-			<br>
+<!-- Committees Grid -->
+<section>
+  <div class="container-wide">
+    <div class="section-head">
+      <div>
+        <div class="n">§ 01 — The Eight</div>
+        <h2>Coverage areas.</h2>
+      </div>
+      <p>Committees meet weekly. Each maintains a watchlist, a written thesis queue, and at least one active apprentice cohort per semester.</p>
+    </div>
 
-			<!-- Footer -->
-			<div id="footer">			
-				<!-- Copyright -->
-				<div class="copyright">
-					<ul class="menu">
-						<li>International Business and Economics Club, University of Pennsylvania, Philadelphia, PA. All rights reserved.</li>
-						<li>LinkedIn: <a href="https://www.linkedin.com/groups/14548358">Penn International Business and Economics Club</a></li>
-						<li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
-					</ul>
-				</div>
-			</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0; border-top:1px solid var(--ink-900)">
 
-		</div>
-	</body>
+      <div style="padding:48px 40px 48px 0; border-bottom:1px solid var(--rule); border-right:1px solid var(--rule)">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px">
+          <div>
+            <div class="eyebrow" style="color:var(--coral-ink); margin-bottom:8px">01 — Americas</div>
+            <h2 class="h-serif" style="font-size:38px; margin:0">North America</h2>
+          </div>
+          <span class="mono" style="font-size:20px; color:var(--coral)">+14.2%</span>
+        </div>
+        <p style="font-size:15px; color:var(--ink-500); line-height:1.6; margin:0 0 24px">
+          US, Canada, and Mexico. Coverage spans large-cap equities, energy, and technology. The committee manages the fund's largest allocation and has priority on North American macro events.
+        </p>
+        <div class="mono" style="font-size:11px; color:var(--ink-500)">Lead: Priya Raghavan · W'26</div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--rule)">
+          <div class="eyebrow" style="margin-bottom:10px">Active positions</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">CNQ</span>
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">SHOP</span>
+          </div>
+        </div>
+      </div>
 
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/jquery.dropotron.min.js"></script>
-			<script src="assets/js/jquery.scrolly.min.js"></script>
-			<script src="assets/js/jquery.scrollex.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
+      <div style="padding:48px 0 48px 40px; border-bottom:1px solid var(--rule)">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px">
+          <div>
+            <div class="eyebrow" style="color:var(--coral-ink); margin-bottom:8px">02 — Americas</div>
+            <h2 class="h-serif" style="font-size:38px; margin:0">Latin America</h2>
+          </div>
+          <span class="mono" style="font-size:20px; color:var(--coral)">+9.8%</span>
+        </div>
+        <p style="font-size:15px; color:var(--ink-500); line-height:1.6; margin:0 0 24px">
+          Brazil, Mexico, Argentina, Chile, Colombia, and Andean markets. Focus on commodity cycles, currency dynamics, and consumer growth names. High-conviction, concentrated book.
+        </p>
+        <div class="mono" style="font-size:11px; color:var(--ink-500)">Lead: Tomás Herrera · W'27</div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--rule)">
+          <div class="eyebrow" style="margin-bottom:10px">Active positions</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">MELI</span>
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">VALE</span>
+          </div>
+        </div>
+      </div>
 
-</html>	
+      <div style="padding:48px 40px 48px 0; border-bottom:1px solid var(--rule); border-right:1px solid var(--rule)">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px">
+          <div>
+            <div class="eyebrow" style="color:var(--coral-ink); margin-bottom:8px">03 — EMEA</div>
+            <h2 class="h-serif" style="font-size:38px; margin:0">Europe</h2>
+          </div>
+          <span class="mono" style="font-size:20px; color:var(--coral)">+6.4%</span>
+        </div>
+        <p style="font-size:15px; color:var(--ink-500); line-height:1.6; margin:0 0 24px">
+          EU, UK, Switzerland, and Nordics. Deep focus on industrials, healthcare, and semiconductors. Monitors ECB policy and cross-border capital flows.
+        </p>
+        <div class="mono" style="font-size:11px; color:var(--ink-500)">Lead: Elena Novak · W'26</div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--rule)">
+          <div class="eyebrow" style="margin-bottom:10px">Active positions</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">ASML</span>
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">NVO</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:48px 0 48px 40px; border-bottom:1px solid var(--rule)">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px">
+          <div>
+            <div class="eyebrow" style="color:var(--coral-ink); margin-bottom:8px">04 — EMEA</div>
+            <h2 class="h-serif" style="font-size:38px; margin:0">MENA</h2>
+          </div>
+          <span class="mono" style="font-size:20px; color:var(--coral)">+11.1%</span>
+        </div>
+        <p style="font-size:15px; color:var(--ink-500); line-height:1.6; margin:0 0 24px">
+          Middle East and North Africa. Coverage centered on Gulf equities, energy majors, and petrochemical sectors. Growing focus on Vision 2030 thematic plays.
+        </p>
+        <div class="mono" style="font-size:11px; color:var(--ink-500)">Lead: Yusuf al-Amin · W'27</div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--rule)">
+          <div class="eyebrow" style="margin-bottom:10px">Active positions</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">ARMK</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:48px 40px 48px 0; border-bottom:1px solid var(--rule); border-right:1px solid var(--rule)">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px">
+          <div>
+            <div class="eyebrow" style="color:var(--coral-ink); margin-bottom:8px">05 — Africa</div>
+            <h2 class="h-serif" style="font-size:38px; margin:0">Sub-Saharan</h2>
+          </div>
+          <span class="mono" style="font-size:20px; color:var(--coral)">+7.9%</span>
+        </div>
+        <p style="font-size:15px; color:var(--ink-500); line-height:1.6; margin:0 0 24px">
+          Nigeria, Kenya, South Africa, and frontier markets. Fintech and banking exposure with commodity overlays. Emphasis on sovereign risk analysis.
+        </p>
+        <div class="mono" style="font-size:11px; color:var(--ink-500)">Lead: Kemi Okonkwo · W'27</div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--rule)">
+          <div class="eyebrow" style="margin-bottom:10px">Active positions</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">Watchlist only</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:48px 0 48px 40px; border-bottom:1px solid var(--rule)">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px">
+          <div>
+            <div class="eyebrow" style="color:var(--coral-ink); margin-bottom:8px">06 — Asia-Pacific</div>
+            <h2 class="h-serif" style="font-size:38px; margin:0">East Asia</h2>
+          </div>
+          <span class="mono" style="font-size:20px; color:var(--coral)">+12.6%</span>
+        </div>
+        <p style="font-size:15px; color:var(--ink-500); line-height:1.6; margin:0 0 24px">
+          China, Japan, South Korea, Taiwan. Semiconductors, consumer electronics, and automotive. Monitors PBoC policy, yen dynamics, and TSMC supply chain.
+        </p>
+        <div class="mono" style="font-size:11px; color:var(--ink-500)">Lead: Ren Takeda · W'26</div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--rule)">
+          <div class="eyebrow" style="margin-bottom:10px">Active positions</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">TSM</span>
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">7203</span>
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">005930</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:48px 40px 48px 0; border-right:1px solid var(--rule)">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px">
+          <div>
+            <div class="eyebrow" style="color:var(--coral-ink); margin-bottom:8px">07 — Asia-Pacific</div>
+            <h2 class="h-serif" style="font-size:38px; margin:0">Southeast Asia</h2>
+          </div>
+          <span class="mono" style="font-size:20px; color:var(--coral)">+10.3%</span>
+        </div>
+        <p style="font-size:15px; color:var(--ink-500); line-height:1.6; margin:0 0 24px">
+          India, Indonesia, Vietnam, Thailand, and the Philippines. Growth-oriented with infrastructure and digital economy exposure. Tracks RBI and BI policy cycles.
+        </p>
+        <div class="mono" style="font-size:11px; color:var(--ink-500)">Lead: Aditi Wiraja · W'27</div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--rule)">
+          <div class="eyebrow" style="margin-bottom:10px">Active positions</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">RELI</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:48px 0 48px 40px">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:20px">
+          <div>
+            <div class="eyebrow" style="color:var(--coral-ink); margin-bottom:8px">08 — Pacific</div>
+            <h2 class="h-serif" style="font-size:38px; margin:0">Oceania</h2>
+          </div>
+          <span class="mono" style="font-size:20px; color:var(--coral)">+5.2%</span>
+        </div>
+        <p style="font-size:15px; color:var(--ink-500); line-height:1.6; margin:0 0 24px">
+          Australia and New Zealand. Banking, mining, and agricultural sectors. Close attention to RBA decisions and China-linked commodity exposure.
+        </p>
+        <div class="mono" style="font-size:11px; color:var(--ink-500)">Lead: Harper Lyle · W'28</div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--rule)">
+          <div class="eyebrow" style="margin-bottom:10px">Active positions</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <span style="font-family:var(--mono); font-size:11px; padding:4px 10px; border:1px solid var(--rule-strong); border-radius:999px">NAB</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Apprenticeship CTA -->
+<section style="background:var(--ink-900); color:var(--paper-2); padding:120px 0">
+  <div class="container-wide" style="text-align:center">
+    <div class="eyebrow" style="color:var(--coral)">◆ Apprenticeship track</div>
+    <h2 class="display" style="font-size:clamp(56px,8vw,108px); margin:20px 0 24px; color:var(--paper-2)">
+      Start as an apprentice.<br><em style="color:var(--coral)">Become a lead.</em>
+    </h2>
+    <p class="serif" style="font-size:20px; font-style:italic; color:rgba(255,255,255,0.7); max-width:600px; margin:0 auto 40px">
+      Each committee runs a semester-long apprenticeship. You'll shadow the lead, build your own watchlist, and defend a pitch before the committee.
+    </p>
+    <a href="membership.html" class="btn" style="margin:0 8px">Apply for Fall '26 <span class="arr">→</span></a>
+    <a href="learn.html" class="btn btn-ghost" style="margin:0 8px; border-color:rgba(255,255,255,0.3); color:var(--paper-2)">Foundations Program</a>
+  </div>
+</section>
+
+</body>
+</html>

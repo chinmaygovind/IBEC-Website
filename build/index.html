@@ -1,102 +1,1054 @@
-<!DOCTYPE HTML>
-<!--
-	Helios by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
-<html>
-	<head>
-		<title>IBEC</title>
-		<link rel="icon" type="image/x-icon" href="images/ibec.ico">
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-		<style>
-			/* Disable text justification for What We Do paragraphs */
-			#features article p {
-				text-align: center !important;
-			}
-		</style>
-	</head>
-	<body class="homepage is-preload">
-		<div id="page-wrapper">
-			<script src="header.js"></script>
-			<!-- Features -->
-				<div class="wrapper style1">
-					<section id="features" class="container special">
-						<header>
-							<h2>Who We Are</h2>
-						</header>
-						<div class="row">
-							<p>
-								The International Business and Economics Club (IBEC) at Penn focuses on the intersection of economics, global affairs, and international relations. Through conversation with industry professionals, analysis of current events, and club workshops, this club aims to provide members with a stronger understanding of how to navigate the world of global business. Individual goals range widely, including preparation for a future career, establishing industry connections, or simply learning where to put capital. 
-							</p>
-							<a href="#" class="image featured"><img src="images/team/officers.jpg" alt="" /></a>
-								
-						</div>
-					</section>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WIBEC — Wharton International Business &amp; Economics Club</title>
+<link rel="icon" type="image/x-icon" href="images/ibec.ico">
+<link rel="stylesheet" href="assets/css/wibec.css" />
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TKBH48M3XP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-TKBH48M3XP');
+</script>
+</head>
+<body>
 
-					<section id="features" class="container special">
-						<header>
-							<h2>What We Do</h2>
-						</header>
-						<div class="row">
-							<article class="col-4 col-12-mobile special">
-								<a href="#" class="image featured"><img src="images/home/header1.png" alt="" /></a>
-								<header>
-									<h3><a href="#">Analysis of Global Markets</a></h3>
-								</header>
-								<p>
-									Committee members will learn how to follow global events and analyze them to determine how markets and their securities are likely to move. 
-								</p>
-							</article>
-							<article class="col-4 col-12-mobile special">
-								<a href="#" class="image featured"><img src="images/home/header2.jpg" alt="" /></a>
-								<header>
-									<h3><a href="#">Regional Committees</a></h3>
-								</header>
-								<p>
-									Members become analysts for committees that represent the markets of particular world regions (Latin America, East Asia, Europe, etc.), and go through an apprenticeship route designed to cement their financial skills while developing global market awareness.
-								</p>
-							</article>
-							<article class="col-4 col-12-mobile special">
-								<a href="#" class="image featured"><img src="images/home/header3.jpg" alt="" /></a>
-								<header>
-									<h3><a href="#">Student-Managed Fund</a></h3>
-								</header>
-								<p>
-									Our fund is an open-end capital appreciation vehicle managed exclusively by committee members. Investment decisions are based on stock pitches developed by regional analysts.</p>
-							</article>	
-						</div>
-					</section>
+<div id="root"></div>
 
-				</div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
-			<!-- Footer -->
-			<div id="footer">			
-				<!-- Copyright -->
-				<div class="copyright">
-					<ul class="menu">
-						<li>International Business and Economics Club, University of Pennsylvania, Philadelphia, PA. All rights reserved.</li>
-						<li>LinkedIn: <a href="https://www.linkedin.com/groups/14548358">Penn International Business and Economics Club</a></li>
-						<li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
-					</ul>
-				</div>
-			</div>
+<script type="text/babel" data-presets="react">
+// ── Data ──────────────────────────────────────────────────
+const REGIONS = [
+  { id: "namerica",  name: "North America",   lead: "Priya Raghavan",  ret: "+14.2%", lat: 40,  lon: -95  },
+  { id: "latam",     name: "Latin America",   lead: "Tomás Herrera",   ret: "+9.8%",  lat: -14, lon: -60  },
+  { id: "europe",    name: "Europe",          lead: "Elena Novak",     ret: "+6.4%",  lat: 50,  lon: 10   },
+  { id: "mena",      name: "MENA",            lead: "Yusuf al-Amin",   ret: "+11.1%", lat: 27,  lon: 33   },
+  { id: "ssa",       name: "Sub-Saharan",     lead: "Kemi Okonkwo",    ret: "+7.9%",  lat: -8,  lon: 22   },
+  { id: "easia",     name: "East Asia",       lead: "Ren Takeda",      ret: "+12.6%", lat: 36,  lon: 120  },
+  { id: "seasia",    name: "SE Asia",         lead: "Aditi Wiraja",    ret: "+10.3%", lat: 2,   lon: 110  },
+  { id: "oceania",   name: "Oceania",         lead: "Harper Lyle",     ret: "+5.2%",  lat: -27, lon: 140  },
+];
 
-		</div>
+const OFFICERS = [
+  { name: "Amelia Shah",      role: "President",                  year: "W'26", conc: "Finance & Statistics"  },
+  { name: "Miles Okafor",     role: "Vice President",             year: "W'26", conc: "Finance & OIDD"        },
+  { name: "Celine Park",      role: "Chief Investment Officer",   year: "W'27", conc: "Finance & Math"        },
+  { name: "Dominic Reyes",    role: "Head of Research",           year: "W'26", conc: "Economics"             },
+  { name: "Ingrid Sorensen",  role: "Head of Markets",            year: "W'27", conc: "Finance"               },
+  { name: "Aryan Mehta",      role: "Head of Committees",         year: "W'27", conc: "Finance & PPE"         },
+  { name: "Juno Takahashi",   role: "Director of Education",      year: "W'26", conc: "Economics & CS"        },
+  { name: "Nora Fitzgerald",  role: "Director of Operations",     year: "W'28", conc: "Finance"               },
+];
 
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/jquery.dropotron.min.js"></script>
-			<script src="assets/js/jquery.scrolly.min.js"></script>
-			<script src="assets/js/jquery.scrollex.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
+const HOLDINGS = [
+  { ticker: "ASML",   name: "ASML Holding",            region: "Europe",        w: 6.8, d: +1.24, ret: "+22.1%" },
+  { ticker: "TSM",    name: "Taiwan Semiconductor",    region: "East Asia",     w: 6.1, d: +0.84, ret: "+31.4%" },
+  { ticker: "MELI",   name: "MercadoLibre",            region: "Latin America", w: 5.4, d: -0.42, ret: "+18.7%" },
+  { ticker: "NVO",    name: "Novo Nordisk",            region: "Europe",        w: 4.9, d: +0.11, ret: "+9.3%"  },
+  { ticker: "7203",   name: "Toyota Motor",            region: "East Asia",     w: 4.2, d: +0.28, ret: "+6.9%"  },
+  { ticker: "ARMK",   name: "Aramco",                  region: "MENA",          w: 3.9, d: -0.09, ret: "+4.1%"  },
+  { ticker: "CNQ",    name: "Canadian Natural Res.",   region: "North America", w: 3.6, d: +0.62, ret: "+11.5%" },
+  { ticker: "005930", name: "Samsung Electronics",     region: "East Asia",     w: 3.4, d: +0.41, ret: "+8.2%"  },
+  { ticker: "RELI",   name: "Reliance Industries",     region: "SE Asia",       w: 3.1, d: -0.18, ret: "+5.7%"  },
+  { ticker: "SHOP",   name: "Shopify",                 region: "North America", w: 2.9, d: +1.02, ret: "+14.3%" },
+  { ticker: "VALE",   name: "Vale S.A.",               region: "Latin America", w: 2.6, d: +0.33, ret: "+7.1%"  },
+  { ticker: "NAB",    name: "Nat'l Australia Bank",    region: "Oceania",       w: 2.3, d: -0.12, ret: "+3.8%"  },
+];
 
+const TRADES = [
+  { date: "04.17", action: "BUY",  ticker: "ASML", px: "$932.40", size: "140 sh", by: "Elena N."  },
+  { date: "04.15", action: "TRIM", ticker: "TSM",  px: "$168.20", size: "120 sh", by: "Ren T."    },
+  { date: "04.12", action: "BUY",  ticker: "MELI", px: "$1,842",  size: "40 sh",  by: "Tomas H."  },
+  { date: "04.10", action: "EXIT", ticker: "INFY", px: "$18.60",  size: "900 sh", by: "Aditi W."  },
+  { date: "04.08", action: "BUY",  ticker: "NVO",  px: "$103.10", size: "260 sh", by: "Elena N."  },
+  { date: "04.03", action: "ADD",  ticker: "SHOP", px: "$87.40",  size: "180 sh", by: "Priya R."  },
+];
 
-	</body>
+const EVENTS = [
+  { date: "Apr 24", time: "18:30", title: "Macro Roundtable — Emerging Markets in a Dollar Cycle", loc: "Huntsman G06",  kind: "Speaker"    },
+  { date: "May 01", time: "19:00", title: "Regional Committee Apprentice Final Pitches",            loc: "Huntsman F65",  kind: "Committee"  },
+  { date: "May 08", time: "17:00", title: "Semester Close — Portfolio Review & Social",             loc: "JMHH Forum",    kind: "Club"       },
+  { date: "Sep 04", time: "18:00", title: "Fall Recruiting — Information Session",                  loc: "Huntsman G06",  kind: "Recruiting" },
+  { date: "Sep 11", time: "19:00", title: "Case Night — Sovereign Debt in Argentina",               loc: "Huntsman F60",  kind: "Committee"  },
+];
+
+const PODCASTS = [
+  { n: "012", title: "The Yen Carry Unwind, Politely Explained",      guest: "Prof. D. Ito, Wharton",  dur: "34 min" },
+  { n: "011", title: "Copper, Chile, and the Electrification Trade",   guest: "A. Valverde, BHP",       dur: "41 min" },
+  { n: "010", title: "Why Europe's Capital Markets Union Matters",     guest: "Dr. K. Laurent, LSE",    dur: "28 min" },
+  { n: "009", title: "Reading the Fed, But Actually",                  guest: "Ex-Fed analyst (anon.)", dur: "46 min" },
+];
+
+const NAV_SERIES   = [100,102,101,104,107,106,109,113,112,116,119,121,118,124,128,131,129,134];
+const BENCH_SERIES = [100,101,100,102,103,104,105,107,106,108,110,111,110,112,114,115,114,117];
+const NAV_LABELS   = ["Oct '24","Nov","Dec","Jan '25","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan '26","Feb","Mar"];
+
+const TICKER_ITEMS = [
+  { sym: "WIBEC NAV",  val: "134.12",  ch: "+0.84%",       dir: "up" },
+  { sym: "SPX",        val: "5,642",   ch: "+0.12%",       dir: "up" },
+  { sym: "NIKKEI",     val: "38,204",  ch: "-0.31%",       dir: "dn" },
+  { sym: "EURO STOXX", val: "518.4",   ch: "+0.08%",       dir: "up" },
+  { sym: "HANG SENG",  val: "17,902",  ch: "-0.44%",       dir: "dn" },
+  { sym: "BOVESPA",    val: "129,140", ch: "+0.61%",       dir: "up" },
+  { sym: "BRENT",      val: "$86.20",  ch: "+1.12%",       dir: "up" },
+  { sym: "GOLD",       val: "$2,348",  ch: "+0.22%",       dir: "up" },
+  { sym: "USD/JPY",    val: "154.62",  ch: "+0.18%",       dir: "up" },
+  { sym: "UST 10Y",    val: "4.21%",   ch: "-2 bps",       dir: "dn" },
+  { sym: "WIBEC alpha",val: "+3.4",    ch: "vs MSCI ACWI", dir: "up" },
+];
+
+const STATS = [
+  { n: "$418K", l: "Assets Under Mgmt"   },
+  { n: "8",     l: "Regional Committees" },
+  { n: "+3.4",  l: "Alpha vs ACWI (ytd)" },
+  { n: "124",   l: "Active Members"      },
+];
+
+// ── Math helpers ──────────────────────────────────────────
+function project(lat, lon, rot, r) {
+  const latR = lat * Math.PI / 180;
+  const lonR = (lon + rot * 180 / Math.PI) * Math.PI / 180;
+  return {
+    x: r * Math.cos(latR) * Math.sin(lonR),
+    y: r * Math.sin(latR) * -1,
+    z: r * Math.cos(latR) * Math.cos(lonR),
+  };
+}
+const easeOutCubic   = x => 1 - Math.pow(1 - x, 3);
+const easeInOutCubic = x => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x+2,3)/2;
+const clamp01        = x => Math.max(0, Math.min(1, x));
+const range          = (t, a, b) => clamp01((t - a) / (b - a));
+
+// ── Shared components ─────────────────────────────────────
+function Placeholder({ label, ratio = "3/2", minH, style }) {
+  return (
+    <div className="placeholder" style={{ aspectRatio: ratio, minHeight: minH, ...style }}>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function TickerBar() {
+  const row = k => TICKER_ITEMS.map((t, i) => (
+    <span key={`${k}-${i}`} className="ticker-chip">
+      <strong>{t.sym}</strong>
+      <span style={{ opacity: 0.9 }}>{t.val}</span>
+      <span className={t.dir === "up" ? "up" : "dn"}>{t.dir === "up" ? "▲" : "▼"}{t.ch}</span>
+    </span>
+  ));
+  return (
+    <div className="ticker-wrap">
+      <div className="ticker">{row("a")}{row("b")}</div>
+    </div>
+  );
+}
+
+function Nav({ route, go }) {
+  const SPA = ["home", "portfolio", "investment"];
+  const pages = [
+    { id: "home",       label: "Home"             },
+    { id: "committees", label: "Committees",   href: "committees.html"        },
+    { id: "events",     label: "Events",       href: "events.html"            },
+    { id: "portfolio",  label: "Live Portfolio"   },
+    { id: "investment", label: "Inv. Committee"   },
+    { id: "podcast",    label: "Podcast",      href: "podcast.html"           },
+    { id: "contact",    label: "Contact",      href: "contact.html"           },
+  ];
+  return (
+    <nav className="top">
+      <div className="bar">
+        <a href="#/home" onClick={e => { e.preventDefault(); go("home"); }} className="mark">
+          <span className="dot"></span>WIBEC
+        </a>
+        <div className="links">
+          {pages.map(p => p.href
+            ? <a key={p.id} href={p.href}>{p.label}</a>
+            : <a key={p.id} href={`#/${p.id}`}
+                 className={route === p.id ? "active" : ""}
+                 onClick={e => { e.preventDefault(); go(p.id); }}>{p.label}</a>
+          )}
+        </div>
+        <div className="right">
+          <span className="pulse"></span>
+          <span>Markets open · NYSE</span>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function Footer({ go }) {
+  return (
+    <footer className="site">
+      <div className="container-wide">
+        <div className="wordmark">WIBEC<span style={{ color: "var(--coral)" }}>.</span></div>
+        <div className="grid">
+          <div>
+            <h5>The Club</h5>
+            <p style={{ maxWidth: 360, opacity: 0.8, margin: 0, fontSize: 14, lineHeight: 1.6 }}>
+              Wharton International Business &amp; Economics Club. A student-run investment committee, macro roundtable, and apprenticeship for global markets.
+            </p>
+          </div>
+          <div>
+            <h5>Explore</h5>
+            <ul>
+              <li><a href="#" onClick={e => { e.preventDefault(); go("home"); }}>Home</a></li>
+              <li><a href="#" onClick={e => { e.preventDefault(); go("portfolio"); }}>Live Portfolio</a></li>
+              <li><a href="#" onClick={e => { e.preventDefault(); go("investment"); }}>Investment Committee</a></li>
+              <li><a href="committees.html">Regional Committees</a></li>
+              <li><a href="podcast.html">Podcast</a></li>
+            </ul>
+          </div>
+          <div>
+            <h5>Members</h5>
+            <ul>
+              <li><a href="membership.html">Apply (Fall '26)</a></li>
+              <li><a href="learn.html">Foundations Program</a></li>
+              <li><a href="#">Newsletter</a></li>
+              <li><a href="#">Alumni Network</a></li>
+            </ul>
+          </div>
+          <div>
+            <h5>Contact</h5>
+            <ul>
+              <li>wibec@wharton.upenn.edu</li>
+              <li>Huntsman Hall, 3730 Walnut</li>
+              <li>Philadelphia, PA 19104</li>
+              <li style={{ marginTop: 16 }}><a className="u-link">LinkedIn →</a></li>
+              <li><a className="u-link">Instagram →</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="bottom">
+          <span>© 2026 Wharton International Business &amp; Economics Club</span>
+          <span>A student organization of the University of Pennsylvania</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ── Globe Hero ────────────────────────────────────────────
+const HERO_VH = 260;
+
+function Hero() {
+  const [progress, setProgress] = React.useState(1);
+  const [ambient, setAmbient]   = React.useState(0);
+  const [hoverId, setHoverId]   = React.useState(null);
+  const [vh, setVh] = React.useState(window.innerHeight);
+  const [vw, setVw] = React.useState(window.innerWidth);
+  const wrapRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const compute = () => {
+      const el = wrapRef.current;
+      if (!el) return;
+      const travel = el.offsetHeight - window.innerHeight;
+      const scrolled = Math.max(0, -el.getBoundingClientRect().top);
+      setProgress(clamp01(scrolled / travel));
+    };
+    const onResize = () => { setVh(window.innerHeight); setVw(window.innerWidth); compute(); };
+    compute();
+    window.addEventListener("scroll", compute, { passive: true });
+    window.addEventListener("resize", onResize);
+    return () => { window.removeEventListener("scroll", compute); window.removeEventListener("resize", onResize); };
+  }, []);
+
+  React.useEffect(() => {
+    let raf;
+    const tick = now => { setAmbient(now / 1000); raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const pZoom   = easeInOutCubic(range(progress, 0.05, 0.70));
+  const pTicker = easeOutCubic(range(progress, 0.72, 0.88));
+  const pHead1  = easeOutCubic(range(progress, 0.72, 0.82));
+  const pHead2  = easeOutCubic(range(progress, 0.78, 0.88));
+  const pHead3  = easeOutCubic(range(progress, 0.84, 0.94));
+  const pPara   = range(progress, 0.86, 0.96);
+  const pBtns   = range(progress, 0.90, 1.00);
+  const pRoster = range(progress, 0.94, 1.00);
+  const pLabels = range(progress, 0.82, 1.00);
+  const pDraw   = range(progress, 0.75, 1.00);
+  const pFig    = range(progress, 0.94, 1.00);
+
+  const rotRate = 0.9 + (0.08 - 0.9) * pZoom;
+  const rot = ambient * rotRate;
+  const R = 240, vbSize = 680;
+
+  const dockedCx = vw * 0.72, dockedCy = vh * 0.52;
+  const introScale = 2.8, dockedScale = 1.0;
+  const introCx = vw * 0.50;
+  const introCy = vh * 0.55 + R * introScale;
+
+  const cx = introCx + (dockedCx - introCx) * pZoom;
+  const cy = introCy + (dockedCy - introCy) * pZoom;
+  const scale = introScale + (dockedScale - introScale) * pZoom;
+
+  const meridians = [];
+  for (let lon = -180; lon < 180; lon += 20) {
+    const pts = [];
+    for (let lat = -80; lat <= 80; lat += 6) pts.push(project(lat, lon, rot, R));
+    meridians.push(pts);
+  }
+  const parallels = [];
+  for (let lat = -60; lat <= 60; lat += 20) {
+    const pts = [];
+    for (let lon = -180; lon <= 180; lon += 6) pts.push(project(lat, lon, rot, R));
+    parallels.push(pts);
+  }
+  const regions = REGIONS.map((r, i) => ({ ...r, idx: i, proj: project(r.lat, r.lon, rot, R) }));
+
+  const scanPhase = progress >= 0.98 ? (ambient % 6) / 6 : -1;
+  const scanY = -R + scanPhase * R * 2.2;
+  const pingOf = i => {
+    if (progress < 0.98) return { r: 0, o: 0 };
+    const phase = ((ambient - i * 0.7) % 5) / 5;
+    if (phase < 0 || phase > 0.6) return { r: 0, o: 0 };
+    return { r: phase * 80, o: (1 - phase / 0.6) * 0.5 };
+  };
+  const focused = hoverId ? regions.find(r => r.id === hoverId) : null;
+
+  return (
+    <section ref={wrapRef} style={{
+      position: "relative", height: `${HERO_VH}vh`,
+      background: "var(--paper)", borderBottom: "1px solid var(--rule)", padding: 0,
+    }}>
+      <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden" }}>
+
+        {/* Globe */}
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 1 }}>
+          <svg viewBox={`-${vbSize/2} -${vbSize/2} ${vbSize} ${vbSize}`} style={{
+            position: "absolute", left: cx - vbSize/2, top: cy - vbSize/2,
+            width: vbSize, height: vbSize,
+            transform: `scale(${scale})`, transformOrigin: "50% 50%",
+            overflow: "visible", willChange: "transform, left, top",
+          }}>
+            <defs>
+              <radialGradient id="gFlash" cx="50%" cy="50%" r="50%">
+                <stop offset="0%"   stopColor="var(--coral)" stopOpacity="0.5"/>
+                <stop offset="60%"  stopColor="var(--coral)" stopOpacity="0.05"/>
+                <stop offset="100%" stopColor="var(--coral)" stopOpacity="0"/>
+              </radialGradient>
+              <clipPath id="gClip"><circle cx="0" cy="0" r={R}/></clipPath>
+            </defs>
+            <circle cx="0" cy="0" r={R*1.6} fill="url(#gFlash)" opacity={(1-pZoom)*0.22}/>
+            <circle cx="0" cy="0" r={R}     fill="none" stroke="var(--ink-900)" strokeWidth="1"   opacity="0.18"/>
+            <circle cx="0" cy="0" r={R-6}   fill="none" stroke="var(--ink-900)" strokeWidth="0.4" opacity="0.08"/>
+            {parallels.map((line,i) => (
+              <polyline key={`par-${i}`} fill="none" stroke="var(--ink-700)"
+                strokeWidth="0.6" opacity="0.22"
+                points={line.map(p=>`${p.x},${p.y}`).join(" ")}/>
+            ))}
+            {meridians.map((line,i) => {
+              const segs = []; let cur = [];
+              for (const p of line) {
+                if (p.z > -30) cur.push(p);
+                else if (cur.length > 1) { segs.push(cur); cur = []; }
+              }
+              if (cur.length > 1) segs.push(cur);
+              return segs.map((seg,j) => (
+                <polyline key={`mer-${i}-${j}`} fill="none" stroke="var(--ink-700)" strokeWidth="0.6"
+                  opacity={0.22*(seg[Math.floor(seg.length/2)].z+30)/(R+30)}
+                  points={seg.map(p=>`${p.x},${p.y}`).join(" ")}/>
+              ));
+            })}
+            {scanPhase >= 0 && (
+              <g clipPath="url(#gClip)" opacity={Math.sin(scanPhase*Math.PI)*0.55}>
+                <line x1={-R} x2={R} y1={scanY} y2={scanY} stroke="var(--coral)" strokeWidth="1.2" opacity="0.9"/>
+                <rect x={-R} y={scanY} width={R*2} height={40} fill="var(--coral)" opacity="0.08"/>
+              </g>
+            )}
+            {regions.map((r,i) => regions.slice(i+1).map((s,j) => {
+              if (r.proj.z < 0 || s.proj.z < 0 || pDraw <= 0) return null;
+              const x2 = r.proj.x + (s.proj.x - r.proj.x)*pDraw;
+              const y2 = r.proj.y + (s.proj.y - r.proj.y)*pDraw;
+              return <line key={`conn-${i}-${j}`} x1={r.proj.x} y1={r.proj.y} x2={x2} y2={y2}
+                stroke="var(--coral)" strokeWidth="0.5" opacity="0.22"/>;
+            }))}
+            {regions.map((r,i) => {
+              const front = r.proj.z > 0;
+              const revealP = easeOutCubic(range(progress, 0.55+i*0.01, 0.85+i*0.01));
+              const alpha = Math.max(revealP, 1-pZoom);
+              if (alpha <= 0) return null;
+              const isFocus = focused && focused.id === r.id;
+              const sz = (front ? 5 : 3) * alpha * (isFocus ? 1.6 : 1);
+              const ping = pingOf(i);
+              return (
+                <g key={r.id} opacity={front ? 1 : 0.3}>
+                  {ping.o > 0 && front && (
+                    <circle cx={r.proj.x} cy={r.proj.y} r={ping.r} fill="none"
+                      stroke="var(--coral)" strokeWidth="0.8" opacity={ping.o}/>
+                  )}
+                  {isFocus && <circle cx={r.proj.x} cy={r.proj.y} r={18} fill="var(--coral)" opacity="0.18"/>}
+                  <circle cx={r.proj.x} cy={r.proj.y} r={sz+6} fill="var(--coral)" opacity="0.15"/>
+                  <circle cx={r.proj.x} cy={r.proj.y} r={sz}   fill="var(--coral)"/>
+                  {front && (pLabels > 0 || isFocus) && (
+                    <g transform={`translate(${r.proj.x+12},${r.proj.y+4})`} opacity={isFocus ? 1 : pLabels}>
+                      <text fontFamily="IBM Plex Mono" fontSize="10"
+                        fill={isFocus ? "var(--coral-ink)" : "var(--ink-900)"} fontWeight="600">
+                        {r.name.toUpperCase()}
+                      </text>
+                      <text fontFamily="IBM Plex Mono" fontSize="9" fill="var(--coral-ink)" y="12">{r.ret}</text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+            <g opacity={range(progress,0.95,1.0)*0.6}>
+              <line x1={-R-30} y1="0" x2={-R-10} y2="0" stroke="var(--ink-900)" strokeWidth="0.5"/>
+              <line x1={R+10}  y1="0" x2={R+30}  y2="0" stroke="var(--ink-900)" strokeWidth="0.5"/>
+              <text x={-R-40} y={4} fontFamily="IBM Plex Mono" fontSize="9" textAnchor="end" fill="var(--ink-500)">EQUATOR</text>
+            </g>
+          </svg>
+        </div>
+
+        {/* Ticker */}
+        <div style={{
+          position: "absolute", top: 58, left: 0, right: 0, zIndex: 4,
+          transform: `translateY(${(1-pTicker)*-120}%)`,
+          opacity: pTicker, willChange: "transform, opacity",
+        }}>
+          <TickerBar/>
+        </div>
+
+        {/* Text */}
+        <div className="container-wide" style={{
+          position: "absolute", inset: 0,
+          display: "grid", gridTemplateColumns: "1.05fr 1fr", gap: 48,
+          alignItems: "center", padding: "0 32px", zIndex: 2, pointerEvents: "none",
+        }}>
+          <div style={{ position: "relative", maxWidth: 760, pointerEvents: "auto" }}>
+            <div className="eyebrow" style={{
+              marginBottom: 20,
+              opacity: range(progress, 0.72, 0.84),
+              transform: `translateY(${(1-range(progress,0.72,0.84))*10}px)`,
+            }}>
+              <span style={{ color: "var(--coral-ink)" }}>◆</span> Vol. XIV · Wharton · Spring 2026
+            </div>
+            <h1 className="display" style={{ fontSize: "clamp(52px,7vw,112px)", margin: 0, letterSpacing: "-0.03em", lineHeight: 1.02 }}>
+              {[
+                { el: <>Eight regions.</>,                                           p: pHead1 },
+                { el: <><em style={{color:"var(--coral-ink)"}}>One</em> student fund.</>, p: pHead2 },
+                { el: <>Global by <em>design</em>.</>,                               p: pHead3 },
+              ].map((ln,i) => (
+                <span key={i} style={{
+                  display: "block", opacity: ln.p,
+                  transform: `translateY(${(1-ln.p)*28}px)`,
+                  clipPath: `inset(0 ${(1-ln.p)*100}% 0 0)`,
+                  willChange: "transform, opacity, clip-path",
+                }}>{ln.el}</span>
+              ))}
+            </h1>
+            <p style={{
+              fontFamily: "var(--serif)", fontSize: 18, fontStyle: "italic",
+              color: "var(--ink-700)", maxWidth: 520, marginTop: 24, lineHeight: 1.5,
+              opacity: pPara, transform: `translateY(${(1-pPara)*14}px)`,
+            }}>
+              Wharton's student committee for international markets — an apprenticeship in macro, a working capital vehicle, and a newsroom for the world's economies.
+            </p>
+            <div style={{ display: "flex", gap: 12, marginTop: 24, opacity: pBtns, transform: `translateY(${(1-pBtns)*10}px)` }}>
+              <a className="btn" href="#/portfolio" onClick={e=>{e.preventDefault();window.__wibecGo&&window.__wibecGo("portfolio");}}>Open Live Portfolio <span className="arr">→</span></a>
+              <a className="btn btn-ghost" href="membership.html">Apply for Fall '26</a>
+            </div>
+            <div style={{
+              marginTop: 28, display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "4px 18px",
+              fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: "0.08em",
+              opacity: pRoster, borderTop: "1px solid var(--rule)", paddingTop: 14, maxWidth: 680,
+            }}>
+              {regions.map((r,i) => (
+                <button key={r.id}
+                  onMouseEnter={() => setHoverId(r.id)}
+                  onMouseLeave={() => setHoverId(null)}
+                  style={{
+                    background: "none", border: "none", padding: "6px 0",
+                    textAlign: "left", cursor: "pointer",
+                    color: hoverId === r.id ? "var(--coral-ink)" : "var(--ink-700)",
+                    textTransform: "uppercase", fontFamily: "inherit",
+                    fontSize: "inherit", letterSpacing: "inherit", transition: "color 120ms",
+                  }}
+                >
+                  <span style={{ color: hoverId===r.id?"var(--coral)":"var(--ink-500)", marginRight: 6 }}>
+                    {String(i+1).padStart(2,"0")}
+                  </span>
+                  {r.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ position: "relative", height: "100%" }}>
+            <div style={{
+              position: "absolute", top: "14%", right: 0,
+              fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em",
+              color: "var(--ink-500)", textAlign: "right", opacity: pFig,
+            }}>
+              <div style={{ color: "var(--ink-900)", fontWeight: 600, marginBottom: 4 }}>FIG. 01 — COVERAGE MAP</div>
+              <div>8 committees · rotated view</div>
+              <div>returns, trailing 12mo</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Intro caption */}
+        <div style={{
+          position: "absolute", left: "50%", bottom: "28%", transform: "translateX(-50%)",
+          fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.24em", textTransform: "uppercase",
+          color: "var(--ink-500)", opacity: (1-pZoom)*0.9, whiteSpace: "nowrap",
+          zIndex: 3, textAlign: "center", pointerEvents: "none",
+        }}>
+          <div style={{ color: "var(--coral-ink)", marginBottom: 6 }}>◆ WIBEC — Coverage Active</div>
+          <div>Scroll to dock</div>
+        </div>
+
+        {/* Scroll hint */}
+        <div style={{
+          position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)",
+          fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: "0.24em", textTransform: "uppercase",
+          color: "var(--ink-500)", opacity: (1-progress)*0.8,
+          display: "flex", alignItems: "center", gap: 10, zIndex: 5, pointerEvents: "none",
+        }}>
+          <span style={{ color: "var(--coral)" }}>↓</span>
+          Scroll to dock · {Math.round(progress*100)}%
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Home sections ─────────────────────────────────────────
+function StatsStrip() {
+  return (
+    <section style={{ padding: "56px 0", borderBottom: "1px solid var(--rule)", background: "var(--paper-2)" }}>
+      <div className="container-wide" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)" }}>
+        {STATS.map((s,i) => (
+          <div key={i} style={{ padding: "8px 32px", borderLeft: i===0?"none":"1px solid var(--rule)" }}>
+            <div style={{ fontFamily:"var(--serif)", fontSize:64, lineHeight:1, color:"var(--ink-900)", letterSpacing:"-0.02em" }}>{s.n}</div>
+            <div className="eyebrow" style={{ marginTop:10 }}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function WhoWeAre() {
+  return (
+    <section>
+      <div className="container-wide">
+        <div className="section-head">
+          <div><div className="n">§ 01 — Mandate</div><h2>Who we are.</h2></div>
+          <p>WIBEC — the Wharton International Business &amp; Economics Club — is a student committee for international capital markets. We sit at the intersection of economics, global affairs, and investing.</p>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"start" }}>
+          <div className="reveal">
+            <Placeholder label="Officer photo · Huntsman Hall" ratio="4/5"/>
+          </div>
+          <div className="reveal" style={{ paddingTop:40 }}>
+            <p className="serif" style={{ fontSize:26, lineHeight:1.4, color:"var(--ink-900)", margin:0 }}>
+              We do three things — and only three things — <em style={{ color:"var(--coral-ink)" }}>very seriously.</em>
+            </p>
+            <div style={{ marginTop:40, display:"grid", gap:28 }}>
+              {[
+                { n:"01", t:"We analyze global markets.", b:"Members learn to follow macro news and connect it to how securities actually move — currencies, sovereign spreads, commodities, equities." },
+                { n:"02", t:"We run regional committees.", b:"Eight coverage teams — from Latin America to East Asia — each with an apprentice track that cements financial skills while developing real market awareness." },
+                { n:"03", t:"We manage a student fund.", b:"An open-ended, capital-appreciation vehicle managed exclusively by committee members. Every position begins as a written pitch." },
+              ].map(it => (
+                <div key={it.n} style={{ display:"grid", gridTemplateColumns:"56px 1fr", gap:20, paddingTop:20, borderTop:"1px solid var(--rule)" }}>
+                  <div className="mono" style={{ fontSize:11, color:"var(--coral-ink)", letterSpacing:"0.14em", paddingTop:4 }}>{it.n}</div>
+                  <div>
+                    <h3 className="h-serif" style={{ fontSize:22, margin:0, marginBottom:6 }}>{it.t}</h3>
+                    <p style={{ margin:0, fontSize:15, color:"var(--ink-500)", lineHeight:1.6 }}>{it.b}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CommitteesMap() {
+  const [hover, setHover] = React.useState(null);
+  const W=1000, H=500;
+  const px = lon => ((lon+180)/360)*W;
+  const py = lat => ((90-lat)/180)*H;
+  return (
+    <section style={{ background:"var(--ink-900)", color:"var(--paper-2)", padding:"120px 0" }}>
+      <div className="container-wide">
+        <div className="section-head" style={{ color:"var(--paper-2)" }}>
+          <div>
+            <div className="n" style={{ color:"var(--coral)" }}>§ 02 — Coverage</div>
+            <h2 style={{ color:"var(--paper-2)" }}>Eight regions, actively covered.</h2>
+          </div>
+          <p style={{ color:"rgba(255,255,255,0.65)" }}>Each committee runs its own research calendar, maintains a watchlist, and defends pitches at weekly investment committee. Apprentices rotate before specializing.</p>
+        </div>
+        <div style={{ position:"relative", border:"1px solid rgba(255,255,255,0.15)", padding:24, background:"rgba(255,255,255,0.02)" }}>
+          <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:"auto", display:"block" }}>
+            {[-60,-30,0,30,60].map(lat => <line key={lat} x1="0" x2={W} y1={py(lat)} y2={py(lat)} stroke="rgba(255,255,255,0.06)"/>)}
+            {[-150,-120,-90,-60,-30,0,30,60,90,120,150].map(lon => <line key={lon} y1="0" y2={H} x1={px(lon)} x2={px(lon)} stroke="rgba(255,255,255,0.06)"/>)}
+            <line x1="0" x2={W} y1={py(0)} y2={py(0)} stroke="rgba(255,255,255,0.16)" strokeDasharray="4 4"/>
+            {REGIONS.map(r => {
+              const active = hover===r.id;
+              return (
+                <g key={r.id} onMouseEnter={()=>setHover(r.id)} onMouseLeave={()=>setHover(null)} style={{ cursor:"pointer" }}>
+                  <circle cx={px(r.lon)} cy={py(r.lat)} r={active?40:28} fill="var(--coral)" opacity={active?0.18:0.08}/>
+                  <circle cx={px(r.lon)} cy={py(r.lat)} r={active?16:12} fill="var(--coral)" opacity={active?0.32:0.18}/>
+                  <circle cx={px(r.lon)} cy={py(r.lat)} r="5" fill="var(--coral)"/>
+                  <line x1={px(r.lon)} y1={py(r.lat)} x2={px(r.lon)+40} y2={py(r.lat)-40} stroke="rgba(255,255,255,0.35)" strokeWidth="0.8"/>
+                  <g transform={`translate(${px(r.lon)+44},${py(r.lat)-40})`}>
+                    <text fontFamily="IBM Plex Mono" fontSize="11" fill="var(--paper-2)" fontWeight="600">{r.name}</text>
+                    <text fontFamily="IBM Plex Mono" fontSize="10" fill="var(--coral)" y="14">{r.ret} · {r.lead}</text>
+                  </g>
+                </g>
+              );
+            })}
+          </svg>
+          <div style={{ position:"absolute", top:24, right:36, fontFamily:"var(--mono)", fontSize:10, color:"rgba(255,255,255,0.5)", letterSpacing:"0.14em" }}>
+            FIG. 02 — REGIONAL COMMITTEES · EQUIRECT PROJ
+          </div>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:0, marginTop:40, borderTop:"1px solid rgba(255,255,255,0.15)" }}>
+          {REGIONS.map((r,i) => (
+            <div key={r.id} style={{
+              padding:"24px 20px",
+              borderRight:(i%4!==3)?"1px solid rgba(255,255,255,0.15)":"none",
+              borderBottom:i<4?"1px solid rgba(255,255,255,0.15)":"none",
+            }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
+                <h4 className="h-serif" style={{ color:"var(--paper-2)", margin:0, fontSize:18 }}>{r.name}</h4>
+                <span className="mono" style={{ color:"var(--coral)", fontSize:12 }}>{r.ret}</span>
+              </div>
+              <div className="mono" style={{ fontSize:11, opacity:0.55, marginTop:6 }}>{r.lead} · W'27</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EventsStrip({ go }) {
+  return (
+    <section>
+      <div className="container-wide">
+        <div className="section-head">
+          <div><div className="n">§ 03 — Calendar</div><h2>This semester.</h2></div>
+          <p>The weekly rhythm: research roundtable on Mondays, committee pitches on Thursdays, external speakers as they come.</p>
+        </div>
+        <div style={{ borderTop:"1px solid var(--ink-900)" }}>
+          {EVENTS.map((e,i) => (
+            <a key={i} href="events.html" style={{
+              display:"grid", gridTemplateColumns:"120px 72px 1fr 180px 120px 40px",
+              gap:24, padding:"28px 0", borderBottom:"1px solid var(--rule)",
+              alignItems:"center", cursor:"pointer", transition:"background .25s", textDecoration:"none",
+            }}
+              onMouseEnter={ev => ev.currentTarget.style.background="rgba(223,115,102,0.05)"}
+              onMouseLeave={ev => ev.currentTarget.style.background="transparent"}
+            >
+              <div className="mono" style={{ fontSize:13, color:"var(--ink-900)" }}>{e.date}</div>
+              <div className="mono" style={{ fontSize:12, color:"var(--ink-500)" }}>{e.time}</div>
+              <div className="h-serif" style={{ fontSize:22 }}>{e.title}</div>
+              <div className="mono" style={{ fontSize:12, color:"var(--ink-500)" }}>{e.loc}</div>
+              <div className="kind-badge">{e.kind}</div>
+              <div style={{ textAlign:"right", color:"var(--ink-500)" }}>→</div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PodcastRail() {
+  return (
+    <section style={{ background:"var(--paper-2)", borderTop:"1px solid var(--rule)", borderBottom:"1px solid var(--rule)" }}>
+      <div className="container-wide">
+        <div className="section-head">
+          <div><div className="n">§ 04 — Audio</div><h2>The WIBEC podcast.</h2></div>
+          <p>Long-form conversation with faculty, practitioners, and members back from internships. Released bi-weekly.</p>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:48 }}>
+          <Placeholder label="Podcast cover · Ep. 012" ratio="1/1"/>
+          <div>
+            {PODCASTS.map(p => (
+              <div key={p.n} style={{
+                display:"grid", gridTemplateColumns:"56px 1fr 80px 40px",
+                gap:16, padding:"22px 0", borderBottom:"1px solid var(--rule)", alignItems:"center", cursor:"pointer",
+              }}>
+                <div className="mono" style={{ color:"var(--coral-ink)", fontSize:13 }}>#{p.n}</div>
+                <div>
+                  <div className="h-serif" style={{ fontSize:19, lineHeight:1.3 }}>{p.title}</div>
+                  <div className="mono" style={{ fontSize:11, color:"var(--ink-500)", marginTop:4 }}>{p.guest}</div>
+                </div>
+                <div className="mono" style={{ fontSize:12, color:"var(--ink-500)" }}>{p.dur}</div>
+                <div style={{ width:36, height:36, borderRadius:"50%", border:"1px solid var(--ink-900)", display:"flex", alignItems:"center", justifyContent:"center" }}>▶</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ApplyCTA() {
+  return (
+    <section style={{ paddingTop:140, paddingBottom:140 }}>
+      <div className="container-wide" style={{ textAlign:"center" }}>
+        <div className="eyebrow" style={{ color:"var(--coral-ink)" }}>◆ Fall 2026 recruiting</div>
+        <h2 className="display" style={{ fontSize:"clamp(56px,8vw,128px)", margin:"16px 0 24px" }}>
+          Join the <em style={{ color:"var(--coral-ink)" }}>newsroom.</em>
+        </h2>
+        <p className="serif" style={{ fontSize:22, fontStyle:"italic", color:"var(--ink-700)", maxWidth:640, margin:"0 auto 40px" }}>
+          Applications open September 2 for all Penn undergraduates. No prerequisite beyond curiosity about how the world's economies work.
+        </p>
+        <div style={{ display:"inline-flex", gap:14 }}>
+          <a href="membership.html" className="btn btn-coral">Start an application <span className="arr">→</span></a>
+          <a href="learn.html" className="btn btn-ghost">Read the Foundations Program</a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Home({ go }) {
+  React.useEffect(() => {
+    const els = document.querySelectorAll(".reveal");
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("in"); });
+    }, { threshold: 0.1 });
+    els.forEach(el => io.observe(el));
+    return () => io.disconnect();
+  });
+  return (
+    <div className="page-enter">
+      <Hero/>
+      <StatsStrip/>
+      <WhoWeAre/>
+      <CommitteesMap/>
+      <EventsStrip go={go}/>
+      <PodcastRail/>
+      <ApplyCTA/>
+    </div>
+  );
+}
+
+// ── Portfolio page ─────────────────────────────────────────
+function PortfolioPage() {
+  const REGION_COLOR = {
+    "Europe":"#6b7aa3","East Asia":"#c08a4e","Latin America":"#a85b6c",
+    "MENA":"#9b7a4a","North America":"#4f7a5e","SE Asia":"#7a5b8f",
+    "Oceania":"#5a8a8a","Sub-Saharan":"#b5744a",
+  };
+  const nav = NAV_SERIES, bench = BENCH_SERIES, labels = NAV_LABELS;
+  const W=1200, H=420, P=48;
+  const min = Math.min(...nav,...bench)-2, max=Math.max(...nav,...bench)+2;
+  const sx = (i,arr) => P+(i/(arr.length-1))*(W-P*2);
+  const sy = v => H-P-((v-min)/(max-min))*(H-P*2);
+  const navPath   = nav.map((v,i)=>`${i===0?"M":"L"}${sx(i,nav)},${sy(v)}`).join(" ");
+  const benchPath = bench.map((v,i)=>`${i===0?"M":"L"}${sx(i,bench)},${sy(v)}`).join(" ");
+
+  return (
+    <div className="page-enter">
+      <section style={{ padding:"64px 0 32px", borderBottom:"1px solid var(--rule)" }}>
+        <div className="container-wide">
+          <div className="page-header-meta">
+            <span>§ Live Portfolio</span>
+            <span>Last marked · Apr 19, 2026 · 16:00 EST</span>
+            <span>WIBEC Global Fund I</span>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:48, alignItems:"end" }}>
+            <h1 className="display" style={{ fontSize:"clamp(56px,7vw,108px)", margin:0 }}>
+              The fund, <em style={{ color:"var(--coral-ink)" }}>marked&nbsp;to</em> market.
+            </h1>
+            <p className="serif" style={{ fontSize:18, fontStyle:"italic", color:"var(--ink-700)", margin:0 }}>
+              Every position began as a written pitch, defended at committee, and voted by members. We publish our book for fiduciary and educational reasons.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ padding:"64px 0", borderBottom:"1px solid var(--rule)" }}>
+        <div className="container-wide">
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:0, marginBottom:40 }}>
+            {[
+              { l:"NAV (base 100)", v:"134.12", sub:"+0.84% today"    },
+              { l:"Trailing 18mo",  v:"+34.1%", sub:"vs ACWI +17.0%" },
+              { l:"Max Drawdown",   v:"−6.8%",  sub:"Jan '25"        },
+              { l:"Sharpe (ytd)",   v:"1.74",   sub:"after fees · mock" },
+            ].map((k,i) => (
+              <div key={i} style={{ padding:"8px 24px", borderLeft:i===0?"none":"1px solid var(--rule)" }}>
+                <div className="eyebrow">{k.l}</div>
+                <div style={{ fontFamily:"var(--serif)", fontSize:48, color:"var(--ink-900)", lineHeight:1.1, marginTop:8 }}>{k.v}</div>
+                <div className="mono" style={{ fontSize:11, color:"var(--ink-500)", marginTop:4 }}>{k.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background:"var(--paper-2)", border:"1px solid var(--rule)", padding:32 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
+              <div className="eyebrow">FIG. 01 — NAV vs MSCI ACWI (rebased 100)</div>
+              <div className="mono" style={{ fontSize:11, color:"var(--ink-500)" }}>
+                <span style={{ display:"inline-block", width:14, height:2, background:"var(--coral)", marginRight:6, verticalAlign:"middle" }}/>
+                WIBEC &nbsp;·&nbsp;
+                <span style={{ display:"inline-block", width:14, borderTop:"1px dashed var(--ink-500)", marginRight:6, verticalAlign:"middle" }}/>
+                ACWI
+              </div>
+            </div>
+            <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:"auto" }}>
+              {[0,0.25,0.5,0.75,1].map((f,i) => (
+                <g key={i}>
+                  <line x1={P} x2={W-P} y1={P+f*(H-P*2)} y2={P+f*(H-P*2)} stroke="var(--rule)"/>
+                  <text x={P-8} y={P+f*(H-P*2)+4} fontFamily="IBM Plex Mono" fontSize="10" fill="var(--ink-500)" textAnchor="end">
+                    {Math.round(max-f*(max-min))}
+                  </text>
+                </g>
+              ))}
+              <path d={benchPath} fill="none" stroke="var(--ink-500)" strokeWidth="1.5" strokeDasharray="4 5"/>
+              <path d={`${navPath} L${sx(nav.length-1,nav)},${H-P} L${sx(0,nav)},${H-P} Z`} fill="var(--coral)" opacity="0.1"/>
+              <path d={navPath} fill="none" stroke="var(--coral)" strokeWidth="2.2"/>
+              <circle cx={sx(nav.length-1,nav)} cy={sy(nav[nav.length-1])} r="5" fill="var(--coral)"/>
+              {labels.map((lb,i) => i%2===0 ? (
+                <text key={i} x={sx(i,nav)} y={H-16} fontFamily="IBM Plex Mono" fontSize="10" fill="var(--ink-500)" textAnchor="middle">{lb}</text>
+              ) : null)}
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ padding:"64px 0", borderBottom:"1px solid var(--rule)" }}>
+        <div className="container-wide">
+          <div className="section-head">
+            <div><div className="n">§ 02 — Holdings</div><h2>The book.</h2></div>
+            <p>Top twelve positions by weight. Selections are reviewed quarterly at the spring and fall investment offsites.</p>
+          </div>
+          <div style={{ borderTop:"2px solid var(--ink-900)" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"60px 1fr 1.6fr 1fr 90px 110px 110px", gap:16, padding:"14px 0", borderBottom:"1px solid var(--rule)", fontFamily:"var(--mono)", fontSize:10, letterSpacing:"0.14em", textTransform:"uppercase", color:"var(--ink-500)" }}>
+              <span>#</span><span>Ticker</span><span>Name</span><span>Region</span>
+              <span style={{textAlign:"right"}}>Wt.</span>
+              <span style={{textAlign:"right"}}>Day</span>
+              <span style={{textAlign:"right"}}>Return</span>
+            </div>
+            {HOLDINGS.map((h,i) => (
+              <div key={h.ticker} style={{ display:"grid", gridTemplateColumns:"60px 1fr 1.6fr 1fr 90px 110px 110px", gap:16, padding:"18px 0", borderBottom:"1px solid var(--rule)", alignItems:"center" }}>
+                <span className="mono" style={{ fontSize:12, color:"var(--ink-500)" }}>{String(i+1).padStart(2,"0")}</span>
+                <span className="mono" style={{ fontSize:14, fontWeight:600, color:"var(--ink-900)" }}>{h.ticker}</span>
+                <span className="h-serif" style={{ fontSize:17 }}>{h.name}</span>
+                <span style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ width:6, height:6, borderRadius:"50%", background:REGION_COLOR[h.region]||"var(--coral)", flexShrink:0 }}/>
+                  <span className="mono" style={{ fontSize:12, color:"var(--ink-500)" }}>{h.region}</span>
+                </span>
+                <span className="num" style={{ textAlign:"right", fontSize:14 }}>{h.w.toFixed(1)}%</span>
+                <span className="num" style={{ textAlign:"right", fontSize:14, color:h.d>=0?"#2f6e4e":"var(--coral-ink)" }}>
+                  {h.d>=0?"▲":"▼"} {Math.abs(h.d).toFixed(2)}%
+                </span>
+                <span className="num" style={{ textAlign:"right", fontSize:14, color:"var(--coral-ink)" }}>{h.ret}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ padding:"64px 0", background:"var(--paper-2)" }}>
+        <div className="container-wide">
+          <div className="section-head">
+            <div><div className="n">§ 03 — Tape</div><h2>Recent trades.</h2></div>
+            <p>Executions logged by the responsible committee lead. Entries within 48 hours are visible to members only.</p>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:40 }}>
+            <div>
+              {TRADES.map((t,i) => (
+                <div key={i} style={{ display:"grid", gridTemplateColumns:"60px 80px 1fr 90px 90px", gap:14, padding:"18px 0", borderBottom:"1px solid var(--rule)", alignItems:"center" }}>
+                  <span className="mono" style={{ fontSize:12, color:"var(--ink-500)" }}>{t.date}</span>
+                  <span style={{
+                    fontFamily:"var(--mono)", fontSize:10, letterSpacing:"0.12em", padding:"3px 8px",
+                    borderRadius:999, textAlign:"center",
+                    border:`1px solid ${t.action==="EXIT"?"var(--coral-ink)":t.action==="BUY"||t.action==="ADD"?"var(--ink-900)":"var(--ink-500)"}`,
+                    color:t.action==="EXIT"?"var(--coral-ink)":"var(--ink-900)",
+                  }}>{t.action}</span>
+                  <span className="h-serif" style={{ fontSize:18 }}>
+                    {t.ticker}
+                    <span className="mono" style={{ fontSize:11, color:"var(--ink-500)", marginLeft:10 }}>by {t.by}</span>
+                  </span>
+                  <span className="num" style={{ fontSize:13, color:"var(--ink-700)" }}>{t.px}</span>
+                  <span className="mono" style={{ fontSize:12, color:"var(--ink-500)", textAlign:"right" }}>{t.size}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ borderLeft:"1px solid var(--rule)", paddingLeft:40 }}>
+              <div className="eyebrow" style={{ marginBottom:16 }}>Composition · by region</div>
+              <div style={{ display:"grid", gap:14 }}>
+                {[
+                  ["East Asia",22],["Europe",19],["North America",16],["Latin America",14],
+                  ["MENA",10],["SE Asia",9],["Sub-Saharan",6],["Oceania",4],
+                ].map(([r,p]) => (
+                  <div key={r}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                      <span className="mono" style={{ fontSize:12 }}>{r}</span>
+                      <span className="num" style={{ fontSize:12, color:"var(--ink-500)" }}>{p}%</span>
+                    </div>
+                    <div style={{ height:6, background:"var(--paper-3)" }}>
+                      <div style={{ width:`${p*4}%`, maxWidth:"100%", height:"100%", background:"var(--coral)" }}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ── Investment Committee page ──────────────────────────────
+function CommitteePage() {
+  return (
+    <div className="page-enter">
+      <section style={{ padding:"64px 0 40px", borderBottom:"1px solid var(--rule)" }}>
+        <div className="container-wide">
+          <div className="page-header-meta">
+            <span>§ Investment Committee</span>
+            <span>Spring 2026 Roster</span>
+            <span>Thursdays · 18:30 · Huntsman F65</span>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1.3fr 1fr", gap:64, alignItems:"end" }}>
+            <h1 className="display" style={{ fontSize:"clamp(56px,7vw,108px)", margin:0 }}>
+              The committee <em style={{ color:"var(--coral-ink)" }}>of&nbsp;record.</em>
+            </h1>
+            <p className="serif" style={{ fontSize:18, fontStyle:"italic", color:"var(--ink-700)", margin:0 }}>
+              Every position in the fund is approved by this committee. Members rotate annually; votes are by simple majority, minutes are public within the club.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ padding:"64px 0", borderBottom:"1px solid var(--rule)" }}>
+        <div className="container-wide">
+          <div className="section-head">
+            <div><div className="n">§ 01 — Officers</div><h2>Eight seats at the table.</h2></div>
+            <p>Elected by the membership each April. Officers sit ex-officio on the investment committee alongside the eight regional leads.</p>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:0, borderTop:"1px solid var(--ink-900)" }}>
+            {OFFICERS.map((o,i) => (
+              <div key={o.name} style={{
+                padding:"28px 24px 32px",
+                borderRight:(i%4!==3)?"1px solid var(--rule)":"none",
+                borderBottom:i<4?"1px solid var(--rule)":"none",
+              }}>
+                <Placeholder label={`Headshot · ${o.name}`} ratio="4/5"/>
+                <div className="eyebrow" style={{ color:"var(--coral-ink)", marginTop:18 }}>{o.role}</div>
+                <h3 className="h-serif" style={{ fontSize:24, margin:"8px 0 6px" }}>{o.name}</h3>
+                <div className="mono" style={{ fontSize:11, color:"var(--ink-500)" }}>{o.year} · {o.conc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ padding:"64px 0", background:"var(--paper-2)", borderBottom:"1px solid var(--rule)" }}>
+        <div className="container-wide">
+          <div className="section-head">
+            <div><div className="n">§ 02 — Process</div><h2>From idea to position.</h2></div>
+            <p>No position enters the book without a memo, a defense, and a vote. The point isn't the decision — it's the reasoning.</p>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:32 }}>
+            {[
+              { n:"01", t:"Idea.", b:"A pitch originates inside a regional committee — typically from a macro catalyst or an idiosyncratic security thesis an apprentice has been tracking." },
+              { n:"02", t:"Research memo.", b:"The apprentice drafts a two-page memo: thesis, variant perception, valuation, catalysts, risks. The regional lead edits for falsifiability." },
+              { n:"03", t:"Committee defense.", b:"Author presents on Thursday. Q&A is open floor. Officers and regional leads vote; a two-thirds majority is required to initiate." },
+              { n:"04", t:"Execution & monitoring.", b:"The regional lead sizes and executes. The thesis is re-litigated at every quarterly offsite or at a pre-declared trigger." },
+            ].map(s => (
+              <div key={s.n} style={{ paddingTop:24, borderTop:"1px solid var(--ink-900)", display:"flex", flexDirection:"column", gap:14 }}>
+                <div className="mono" style={{ fontSize:12, color:"var(--coral-ink)", letterSpacing:"0.14em" }}>{s.n} / 04</div>
+                <h3 className="h-serif" style={{ fontSize:30, margin:0 }}>{s.t}</h3>
+                <p style={{ margin:0, fontSize:15, color:"var(--ink-500)", lineHeight:1.6 }}>{s.b}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ padding:"64px 0" }}>
+        <div className="container-wide">
+          <div className="section-head">
+            <div><div className="n">§ 03 — Minutes</div><h2>From the record.</h2></div>
+            <p>A running index of decisions and their authors. Detail is available to members in the internal archive.</p>
+          </div>
+          <div style={{ borderTop:"1px solid var(--ink-900)" }}>
+            {[
+              { d:"Apr 17", t:"ASML initiated at 6.8% weight",                 by:"Elena N.",  r:"Europe"        },
+              { d:"Apr 15", t:"TSM trimmed; thesis intact, size discipline",    by:"Ren T.",    r:"East Asia"     },
+              { d:"Apr 10", t:"INFY exit — thesis played out, rotation to MELI",by:"Aditi W.",  r:"South/SE Asia" },
+              { d:"Apr 03", t:"Sovereign debt sector review — EM ex-China",     by:"Committee", r:"Macro"         },
+              { d:"Mar 27", t:"Annual risk review; max position 7.5%",          by:"Committee", r:"Governance"    },
+            ].map((n,i) => (
+              <div key={i} style={{ display:"grid", gridTemplateColumns:"100px 1fr 160px 140px 40px", gap:20, padding:"24px 0", borderBottom:"1px solid var(--rule)", alignItems:"center" }}>
+                <span className="mono" style={{ fontSize:13, color:"var(--ink-900)" }}>{n.d}</span>
+                <span className="h-serif" style={{ fontSize:22 }}>{n.t}</span>
+                <span className="mono" style={{ fontSize:12, color:"var(--ink-500)" }}>{n.by}</span>
+                <span className="kind-badge" style={{ justifySelf:"start" }}>{n.r}</span>
+                <span style={{ textAlign:"right", color:"var(--ink-500)" }}>→</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ── App shell ─────────────────────────────────────────────
+function App() {
+  const [route, setRoute] = React.useState(() => {
+    const hash = window.location.hash.replace("#/","");
+    return ["home","portfolio","investment"].includes(hash) ? hash : "home";
+  });
+
+  const go = r => {
+    setRoute(r);
+    window.location.hash = `/${r}`;
+    window.scrollTo({ top:0, behavior:"instant" });
+  };
+
+  window.__wibecGo = go;
+
+  React.useEffect(() => {
+    const onHash = () => {
+      const h = window.location.hash.replace("#/","");
+      if (["home","portfolio","investment"].includes(h)) {
+        setRoute(h);
+        window.scrollTo({ top:0, behavior:"instant" });
+      }
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  let page;
+  if      (route === "portfolio")   page = <PortfolioPage/>;
+  else if (route === "investment")  page = <CommitteePage/>;
+  else                              page = <Home go={go}/>;
+
+  return (
+    <>
+      <Nav route={route} go={go}/>
+      {page}
+      <Footer go={go}/>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
 </html>
