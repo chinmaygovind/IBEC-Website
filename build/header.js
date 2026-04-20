@@ -2,6 +2,7 @@
 // Usage: <script src="header.js"></script> inside <body>, before page content.
 
 (function () {
+  document.documentElement.setAttribute('data-aesthetic', 'terminal');
   const current = window.location.pathname.split("/").pop() || "index.html";
   const active = (href) => current === href ? ' class="active"' : '';
 

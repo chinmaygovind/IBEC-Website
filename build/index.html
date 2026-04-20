@@ -18,10 +18,12 @@
 <body>
 
 <div id="root"></div>
+<script>document.documentElement.setAttribute('data-aesthetic','terminal');</script>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 
 <script type="text/babel" data-presets="react">
 // ── Data ──────────────────────────────────────────────────
@@ -135,8 +137,65 @@ function Placeholder({ label, ratio = "3/2", minH, style }) {
   );
 }
 
+// Yahoo Finance symbols for live data
+const YF_SYMBOLS = [
+  { sym: "SPX",         yf: "%5EGSPC" },
+  { sym: "NIKKEI",      yf: "%5EN225" },
+  { sym: "EURO STOXX",  yf: "%5ESTOXX50E" },
+  { sym: "HANG SENG",   yf: "%5EHSI" },
+  { sym: "BOVESPA",     yf: "%5EBVSP" },
+  { sym: "BRENT",       yf: "BZ%3DF" },
+  { sym: "GOLD",        yf: "GC%3DF" },
+  { sym: "USD/JPY",     yf: "JPY%3DX" },
+  { sym: "UST 10Y",     yf: "%5ETNX" },
+];
+
 function TickerBar() {
-  const row = k => TICKER_ITEMS.map((t, i) => (
+  const [items, setItems] = React.useState(TICKER_ITEMS);
+
+  React.useEffect(() => {
+    const fmt = (n) => n >= 1000 ? n.toLocaleString("en-US", { maximumFractionDigits: 0 }) : n.toFixed(2);
+    const fetchAll = async () => {
+      try {
+        const results = await Promise.allSettled(
+          YF_SYMBOLS.map(({ sym, yf }) =>
+            fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${yf}?interval=1d&range=1d`)
+              .then(r => r.json())
+              .then(data => {
+                const q = data?.chart?.result?.[0];
+                if (!q) return null;
+                const meta = q.meta;
+                const price = meta.regularMarketPrice;
+                const prev  = meta.previousClose || meta.chartPreviousClose;
+                const chAbs = price - prev;
+                const chPct = (chAbs / prev) * 100;
+                return {
+                  sym,
+                  val: sym === "UST 10Y" ? price.toFixed(2) + "%" : fmt(price),
+                  ch:  (chPct >= 0 ? "+" : "") + chPct.toFixed(2) + "%",
+                  dir: chPct >= 0 ? "up" : "dn",
+                };
+              })
+          )
+        );
+        const live = results
+          .filter(r => r.status === "fulfilled" && r.value)
+          .map(r => r.value);
+        if (live.length > 0) {
+          // Merge live data with static items (keep WIBEC NAV + alpha as-is)
+          setItems(prev => {
+            const map = Object.fromEntries(live.map(l => [l.sym, l]));
+            return prev.map(p => map[p.sym] || p);
+          });
+        }
+      } catch (_) {}
+    };
+    fetchAll();
+    const interval = setInterval(fetchAll, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const row = k => items.map((t, i) => (
     <span key={`${k}-${i}`} className="ticker-chip">
       <strong>{t.sym}</strong>
       <span style={{ opacity: 0.9 }}>{t.val}</span>
@@ -144,40 +203,90 @@ function TickerBar() {
     </span>
   ));
   return (
-    <div className="ticker-wrap">
+    <div className="ticker-wrap" style={{ background: "#071428", borderColor: "rgba(0,212,255,0.12)" }}>
       <div className="ticker">{row("a")}{row("b")}</div>
     </div>
   );
 }
 
 function Nav({ route, go }) {
-  const SPA = ["home", "portfolio", "investment"];
+  const [docked, setDocked] = React.useState(false);
+  React.useEffect(() => {
+    const onScroll = () => setDocked(window.scrollY > window.innerHeight * 1.55);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const pages = [
     { id: "home",       label: "Home"             },
-    { id: "committees", label: "Committees",   href: "committees.html"        },
-    { id: "events",     label: "Events",       href: "events.html"            },
+    { id: "committees", label: "Committees",   href: "committees.html"   },
+    { id: "events",     label: "Events",       href: "events.html"       },
     { id: "portfolio",  label: "Live Portfolio"   },
     { id: "investment", label: "Inv. Committee"   },
-    { id: "podcast",    label: "Podcast",      href: "podcast.html"           },
-    { id: "contact",    label: "Contact",      href: "contact.html"           },
+    { id: "podcast",    label: "Podcast",      href: "podcast.html"      },
+    { id: "contact",    label: "Contact",      href: "contact.html"      },
   ];
+
   return (
-    <nav className="top">
-      <div className="bar">
-        <a href="#/home" onClick={e => { e.preventDefault(); go("home"); }} className="mark">
-          <span className="dot"></span>WIBEC
+    <nav style={{
+      position: "fixed",
+      top: 18,
+      left: "50%",
+      transform: "translateX(-50%)",
+      zIndex: 50,
+      width: "calc(100% - 120px)",
+      maxWidth: 1120,
+      background: docked ? "rgba(6,14,38,0.32)" : "transparent",
+      backdropFilter: docked ? "blur(22px) saturate(1.6)" : "none",
+      WebkitBackdropFilter: docked ? "blur(22px) saturate(1.6)" : "none",
+      border: docked ? "1px solid rgba(0,212,255,0.14)" : "1px solid transparent",
+      borderRadius: 9999,
+      boxShadow: docked ? "0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)" : "none",
+      transition: "background 0.45s ease, backdrop-filter 0.45s ease, border-color 0.45s ease, box-shadow 0.45s ease",
+    }}>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "auto 1fr auto",
+        alignItems: "center",
+        padding: "8px 18px 8px 22px",
+        gap: 24,
+      }}>
+        <a href="#/home" onClick={e => { e.preventDefault(); go("home"); }} style={{ fontFamily:"var(--sans)", fontWeight:700, fontSize:16, color:"#eaf1ff", letterSpacing:"-0.01em", display:"inline-flex", alignItems:"center", gap:8, textDecoration:"none", whiteSpace:"nowrap" }}>
+          <span style={{ width:7, height:7, background:"var(--coral)", borderRadius:"50%", display:"inline-block", boxShadow:"0 0 10px var(--coral)" }}></span>WIBEC
         </a>
-        <div className="links">
-          {pages.map(p => p.href
-            ? <a key={p.id} href={p.href}>{p.label}</a>
-            : <a key={p.id} href={`#/${p.id}`}
-                 className={route === p.id ? "active" : ""}
-                 onClick={e => { e.preventDefault(); go(p.id); }}>{p.label}</a>
-          )}
+        <div style={{ display:"flex", justifyContent:"center", gap:4 }}>
+          {pages.map(p => {
+            const isActive = !p.href && route === p.id;
+            const linkStyle = {
+              display: "inline-block",
+              padding: "8px 16px",
+              fontSize: 13,
+              lineHeight: "18px",
+              borderRadius: 9999,
+              transition: "all .2s",
+              fontWeight: isActive ? 600 : 500,
+              textDecoration: "none",
+              color: isActive ? "#ffffff" : "rgba(234,241,255,0.62)",
+              background: isActive && docked ? "rgba(0,212,255,0.2)" : "transparent",
+              border: isActive && docked ? "1px solid rgba(0,212,255,0.35)" : "1px solid transparent",
+              whiteSpace: "nowrap",
+            };
+            return p.href
+              ? <a key={p.id} href={p.href} style={linkStyle}
+                  onMouseEnter={e => { e.currentTarget.style.color="#fff"; e.currentTarget.style.background="rgba(255,255,255,0.08)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color="rgba(234,241,255,0.62)"; e.currentTarget.style.background="transparent"; }}
+                  >{p.label}</a>
+              : <a key={p.id} href={`#/${p.id}`} style={linkStyle}
+                  onClick={e => { e.preventDefault(); go(p.id); }}
+                  onMouseEnter={e => { if (!isActive) { e.currentTarget.style.color="#fff"; e.currentTarget.style.background="rgba(255,255,255,0.08)"; }}}
+                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.color="rgba(234,241,255,0.62)"; e.currentTarget.style.background="transparent"; }}}
+                  >{p.label}</a>;
+          })}
         </div>
-        <div className="right">
-          <span className="pulse"></span>
-          <span>Markets open · NYSE</span>
+        <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, color:"rgba(234,241,255,0.5)", fontFamily:"var(--mono)", whiteSpace:"nowrap" }}>
+          <span style={{ width:6, height:6, borderRadius:"50%", background:"var(--coral)", boxShadow:"0 0 8px var(--coral)", display:"inline-block" }}></span>
+          <span>Markets open</span>
         </div>
       </div>
     </nav>
@@ -269,7 +378,6 @@ function Hero() {
   }, []);
 
   const pZoom   = easeInOutCubic(range(progress, 0.05, 0.70));
-  const pTicker = easeOutCubic(range(progress, 0.72, 0.88));
   const pHead1  = easeOutCubic(range(progress, 0.72, 0.82));
   const pHead2  = easeOutCubic(range(progress, 0.78, 0.88));
   const pHead3  = easeOutCubic(range(progress, 0.84, 0.94));
@@ -411,15 +519,6 @@ function Hero() {
           </svg>
         </div>
 
-        {/* Ticker */}
-        <div style={{
-          position: "absolute", top: 58, left: 0, right: 0, zIndex: 4,
-          transform: `translateY(${(1-pTicker)*-120}%)`,
-          opacity: pTicker, willChange: "transform, opacity",
-        }}>
-          <TickerBar/>
-        </div>
-
         {/* Text */}
         <div className="container-wide" style={{
           position: "absolute", inset: 0,
@@ -434,7 +533,7 @@ function Hero() {
             }}>
               <span style={{ color: "var(--coral-ink)" }}>◆</span> Vol. XIV · Wharton · Spring 2026
             </div>
-            <h1 className="display" style={{ fontSize: "clamp(52px,7vw,112px)", margin: 0, letterSpacing: "-0.03em", lineHeight: 1.02 }}>
+            <h1 className="display" style={{ fontSize: "clamp(52px,7vw,112px)", margin: 0, letterSpacing: "-0.03em", lineHeight: 1.12 }}>
               {[
                 { el: <>Eight regions.</>,                                           p: pHead1 },
                 { el: <><em style={{color:"var(--coral-ink)"}}>One</em> student fund.</>, p: pHead2 },
@@ -579,56 +678,84 @@ function WhoWeAre() {
 
 function CommitteesMap() {
   const [hover, setHover] = React.useState(null);
+  const [worldPaths, setWorldPaths] = React.useState([]);
   const W=1000, H=500;
   const px = lon => ((lon+180)/360)*W;
   const py = lat => ((90-lat)/180)*H;
+
+  React.useEffect(() => {
+    fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+      .then(r => r.json())
+      .then(world => {
+        const countries = topojson.feature(world, world.objects.countries);
+        const paths = countries.features.map(f => {
+          const geom = f.geometry;
+          const toPath = rings => rings.map(ring =>
+            ring.map((c,i) => `${i===0?'M':'L'}${px(c[0]).toFixed(1)},${py(c[1]).toFixed(1)}`).join(' ') + 'Z'
+          ).join(' ');
+          let d = '';
+          if (geom.type === 'Polygon') d = toPath(geom.coordinates);
+          else if (geom.type === 'MultiPolygon') d = geom.coordinates.map(p => toPath(p)).join(' ');
+          return d;
+        });
+        setWorldPaths(paths);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
-    <section style={{ background:"var(--ink-900)", color:"var(--paper-2)", padding:"120px 0" }}>
+    <section style={{ background:"#06122b", color:"#eaf1ff", padding:"120px 0" }}>
       <div className="container-wide">
-        <div className="section-head" style={{ color:"var(--paper-2)" }}>
+        <div className="section-head" style={{ color:"#eaf1ff" }}>
           <div>
             <div className="n" style={{ color:"var(--coral)" }}>§ 02 — Coverage</div>
-            <h2 style={{ color:"var(--paper-2)" }}>Eight regions, actively covered.</h2>
+            <h2 style={{ color:"#eaf1ff" }}>Eight regions, actively covered.</h2>
           </div>
-          <p style={{ color:"rgba(255,255,255,0.65)" }}>Each committee runs its own research calendar, maintains a watchlist, and defends pitches at weekly investment committee. Apprentices rotate before specializing.</p>
+          <p style={{ color:"rgba(234,241,255,0.7)" }}>Each committee runs its own research calendar, maintains a watchlist, and defends pitches at weekly investment committee. Apprentices rotate before specializing.</p>
         </div>
-        <div style={{ position:"relative", border:"1px solid rgba(255,255,255,0.15)", padding:24, background:"rgba(255,255,255,0.02)" }}>
+        <div style={{ position:"relative", border:"1px solid rgba(0,212,255,0.15)", padding:24, background:"rgba(0,10,32,0.6)", borderRadius:4 }}>
           <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:"auto", display:"block" }}>
-            {[-60,-30,0,30,60].map(lat => <line key={lat} x1="0" x2={W} y1={py(lat)} y2={py(lat)} stroke="rgba(255,255,255,0.06)"/>)}
-            {[-150,-120,-90,-60,-30,0,30,60,90,120,150].map(lon => <line key={lon} y1="0" y2={H} x1={px(lon)} x2={px(lon)} stroke="rgba(255,255,255,0.06)"/>)}
-            <line x1="0" x2={W} y1={py(0)} y2={py(0)} stroke="rgba(255,255,255,0.16)" strokeDasharray="4 4"/>
+            {/* Grid */}
+            {[-60,-30,0,30,60].map(lat => <line key={lat} x1="0" x2={W} y1={py(lat)} y2={py(lat)} stroke="rgba(0,212,255,0.07)"/>)}
+            {[-150,-120,-90,-60,-30,0,30,60,90,120,150].map(lon => <line key={lon} y1="0" y2={H} x1={px(lon)} x2={px(lon)} stroke="rgba(0,212,255,0.07)"/>)}
+            <line x1="0" x2={W} y1={py(0)} y2={py(0)} stroke="rgba(0,212,255,0.22)" strokeDasharray="4 4"/>
+            {/* Country fills */}
+            {worldPaths.map((d,i) => d && (
+              <path key={i} d={d} fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.22)" strokeWidth="0.5"/>
+            ))}
+            {/* Region markers */}
             {REGIONS.map(r => {
               const active = hover===r.id;
               return (
                 <g key={r.id} onMouseEnter={()=>setHover(r.id)} onMouseLeave={()=>setHover(null)} style={{ cursor:"pointer" }}>
-                  <circle cx={px(r.lon)} cy={py(r.lat)} r={active?40:28} fill="var(--coral)" opacity={active?0.18:0.08}/>
-                  <circle cx={px(r.lon)} cy={py(r.lat)} r={active?16:12} fill="var(--coral)" opacity={active?0.32:0.18}/>
-                  <circle cx={px(r.lon)} cy={py(r.lat)} r="5" fill="var(--coral)"/>
-                  <line x1={px(r.lon)} y1={py(r.lat)} x2={px(r.lon)+40} y2={py(r.lat)-40} stroke="rgba(255,255,255,0.35)" strokeWidth="0.8"/>
-                  <g transform={`translate(${px(r.lon)+44},${py(r.lat)-40})`}>
-                    <text fontFamily="IBM Plex Mono" fontSize="11" fill="var(--paper-2)" fontWeight="600">{r.name}</text>
-                    <text fontFamily="IBM Plex Mono" fontSize="10" fill="var(--coral)" y="14">{r.ret} · {r.lead}</text>
+                  <circle cx={px(r.lon)} cy={py(r.lat)} r={active?40:28} fill="var(--coral)" opacity={active?0.2:0.1}/>
+                  <circle cx={px(r.lon)} cy={py(r.lat)} r={active?14:10} fill="var(--coral)" opacity={active?0.4:0.2}/>
+                  <circle cx={px(r.lon)} cy={py(r.lat)} r="4.5" fill="var(--coral)"/>
+                  <line x1={px(r.lon)} y1={py(r.lat)} x2={px(r.lon)+38} y2={py(r.lat)-38} stroke="rgba(0,212,255,0.4)" strokeWidth="0.7"/>
+                  <g transform={`translate(${px(r.lon)+42},${py(r.lat)-40})`}>
+                    <text fontFamily="JetBrains Mono,monospace" fontSize="11" fill="#eaf1ff" fontWeight="600">{r.name}</text>
+                    <text fontFamily="JetBrains Mono,monospace" fontSize="10" fill="var(--coral)" y="14">{r.ret} · {r.lead}</text>
                   </g>
                 </g>
               );
             })}
           </svg>
-          <div style={{ position:"absolute", top:24, right:36, fontFamily:"var(--mono)", fontSize:10, color:"rgba(255,255,255,0.5)", letterSpacing:"0.14em" }}>
+          <div style={{ position:"absolute", top:24, right:36, fontFamily:"var(--mono)", fontSize:10, color:"rgba(0,212,255,0.45)", letterSpacing:"0.14em" }}>
             FIG. 02 — REGIONAL COMMITTEES · EQUIRECT PROJ
           </div>
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:0, marginTop:40, borderTop:"1px solid rgba(255,255,255,0.15)" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:0, marginTop:40, borderTop:"1px solid rgba(0,212,255,0.15)" }}>
           {REGIONS.map((r,i) => (
             <div key={r.id} style={{
               padding:"24px 20px",
-              borderRight:(i%4!==3)?"1px solid rgba(255,255,255,0.15)":"none",
-              borderBottom:i<4?"1px solid rgba(255,255,255,0.15)":"none",
+              borderRight:(i%4!==3)?"1px solid rgba(0,212,255,0.12)":"none",
+              borderBottom:i<4?"1px solid rgba(0,212,255,0.12)":"none",
             }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline" }}>
-                <h4 className="h-serif" style={{ color:"var(--paper-2)", margin:0, fontSize:18 }}>{r.name}</h4>
+                <h4 className="h-serif" style={{ color:"#eaf1ff", margin:0, fontSize:18 }}>{r.name}</h4>
                 <span className="mono" style={{ color:"var(--coral)", fontSize:12 }}>{r.ret}</span>
               </div>
-              <div className="mono" style={{ fontSize:11, opacity:0.55, marginTop:6 }}>{r.lead} · W'27</div>
+              <div className="mono" style={{ fontSize:11, color:"rgba(234,241,255,0.45)", marginTop:6 }}>{r.lead} · W'27</div>
             </div>
           ))}
         </div>
@@ -1042,7 +1169,11 @@ function App() {
   return (
     <>
       <Nav route={route} go={go}/>
-      {page}
+      {/* Ticker sits below nav in normal flow — scrolls away with the page */}
+      <div style={{ paddingTop: 88 }}>
+        <TickerBar/>
+        {page}
+      </div>
       <Footer go={go}/>
     </>
   );

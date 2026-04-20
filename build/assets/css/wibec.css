@@ -467,7 +467,6 @@ section { padding: 96px 0; }
 [data-aesthetic="terminal"] footer.site .wordmark { color: var(--ink-900); font-family: var(--sans); font-weight: 500; }
 
 [data-aesthetic="terminal"] .section-head .n { color: var(--coral); }
-[data-aesthetic="terminal"] [style*="border-radius: 999"] { border-radius: 2px !important; }
 
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
