@@ -50,28 +50,6 @@ const OFFICERS = [
   { name: "Trenton Ryu",           role: "Operations Chair",            email: "tryu@sas.upenn.edu",       photo: "images/team/trenton_ryu.jpg"           },
 ];
 
-const HOLDINGS = [
-  { ticker: "VOO",    name: "Vanguard S&P 500 ETF",         region: "North America", w: 30.4, d: -0.82, ret: "-2.0%"   },
-  { ticker: "SCHG",   name: "Schwab US Large-Cap Growth ETF",region: "North America", w: 28.4, d: -1.12, ret: "-10.0%"  },
-  { ticker: "PLTR",   name: "Palantir Technologies",         region: "North America", w: 10.4, d: +2.45, ret: "+275.0%" },
-  { ticker: "INFY",   name: "Infosys",                      region: "South Asia",    w: 8.1,  d: -0.33, ret: "-18.2%"  },
-  { ticker: "TCEHY",  name: "Tencent Holdings",             region: "East Asia",     w: 7.8,  d: +0.77, ret: "+10.6%"  },
-  { ticker: "FMX",    name: "FEMSA",                        region: "Latin America", w: 6.6,  d: -0.44, ret: "-8.2%"   },
-  { ticker: "SBLK",   name: "Star Bulk Carriers",           region: "Europe",        w: 3.5,  d: +0.11, ret: "-33.3%"  },
-  { ticker: "XFIV",   name: "WisdomTree Floating Rate Tsy", region: "North America", w: 2.5,  d: +0.02, ret: "0.0%"    },
-  { ticker: "IBE.MC", name: "Iberdrola",                    region: "Europe",        w: 1.5,  d: -0.55, ret: "+16.7%"  },
-  { ticker: "YPF",    name: "YPF S.A.",                     region: "Latin America", w: 1.4,  d: +1.22, ret: "+21.7%"  },
-];
-
-const TRADES = [
-  { date: "01.06", action: "EXIT", ticker: "TMCV.NS", px: "—",       size: "100 sh", by: "Committee" },
-  { date: "01.06", action: "EXIT", ticker: "TMPV.NS", px: "—",       size: "100 sh", by: "Committee" },
-  { date: "11.27", action: "BUY",  ticker: "FMX",     px: "$85.00",  size: "85 sh",  by: "Rey V."    },
-  { date: "11.27", action: "BUY",  ticker: "INFY",    px: "$22.00",  size: "450 sh", by: "Shawn G."  },
-  { date: "09.09", action: "BUY",  ticker: "XFIV",    px: "$25.00",  size: "100 sh", by: "Committee" },
-  { date: "08.27", action: "BUY",  ticker: "SCHG",    px: "$100.00", size: "300 sh", by: "Committee" },
-];
-
 const EVENTS = [
   { date: "Apr 25", time: "TBD",   title: "Kiwi Social",                                                          loc: "TBD",           kind: "Social"     },
   { date: "Apr 29", time: "TBD",   title: "Speaker Event — Neel Doshi, Former MD at Citi & UBS",                  loc: "TBD",           kind: "Speaker"    },
@@ -85,10 +63,6 @@ const PODCASTS = [
   { n: "003", title: "Can Oil Restart Venezuela? Economics, Institutions, and the Road Ahead",   guest: "WIBEC Research Team",                     dur: "32:34", href: "https://www.youtube.com/@PennIBEC" },
   { n: "002", title: "Bailouts, Ballots, and Big Markets",                                       guest: "Dr. Maria Pia Olivero",                   dur: "38:42", href: "https://www.youtube.com/@PennIBEC" },
 ];
-
-const NAV_SERIES   = [100,102,101,104,107,106,109,113,112,116,119,121,118,124,128,131,129,134];
-const BENCH_SERIES = [100,101,100,102,103,104,105,107,106,108,110,111,110,112,114,115,114,117];
-const NAV_LABELS   = ["Oct '24","Nov","Dec","Jan '25","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan '26","Feb","Mar"];
 
 const TICKER_ITEMS = [
   { sym: "VOO",    val: "490.00", ch: "-0.82%", dir: "dn" },
