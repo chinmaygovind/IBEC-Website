@@ -90,8 +90,15 @@
     { label: "Home",           href: "index.html"             },
     { label: "Committees",     href: "committees.html"        },
     { label: "Events",         href: "events.html"            },
-    { label: "Live Portfolio", href: "index.html#/portfolio"  },
-    { label: "Inv. Committee", href: "index.html#/investment" },
+    { label: "Live Portfolio", href: "portfolio.html"         },
+    {
+      label: "Learn",
+      children: [
+        { label: "Investment Committee",            href: "index.html#/investment" },
+        { label: "Investment Foundations Program",  href: "learn.html"             },
+        { label: "Board",                           href: "board.html"             },
+      ],
+    },
     { label: "Podcast",        href: "podcast.html"           },
     { label: "Contact",        href: "contact.html"           },
   ];
@@ -100,15 +107,31 @@
     const hash = routeHash();
     const homeRoute = hash === "" || hash === "home";
     if (href === "index.html") return current === "index.html" && homeRoute;
-    if (href === "index.html#/portfolio") return current === "index.html" && hash === "portfolio";
     if (href === "index.html#/investment") return current === "index.html" && hash === "investment";
     const file = href.split("#")[0];
     return current === file;
   }
 
+  function navParentIsActive(item) {
+    if (!item.children) return false;
+    return item.children.some(c => navLinkIsActive(c.href));
+  }
+
   const homeMarkHref = current === "index.html" ? "#/home" : "index.html";
 
   const navLinks = pages.map(p => {
+    if (p.children) {
+      const isActive = navParentIsActive(p);
+      const children = p.children.map(c => {
+        const cActive = navLinkIsActive(c.href);
+        return `<a href="${c.href}" class="wpill-dropdown-item${cActive ? ' is-active' : ''}">${c.label}</a>`;
+      }).join('');
+      return `
+        <div class="wpill-dropdown">
+          <button type="button" class="wpill-link wpill-dropdown-trigger${isActive ? ' is-active' : ''}" aria-haspopup="true" aria-expanded="false">${p.label} <span class="wpill-caret">▾</span></button>
+          <div class="wpill-dropdown-menu" role="menu">${children}</div>
+        </div>`;
+    }
     const isActive = navLinkIsActive(p.href);
     return `<a href="${p.href}" class="wpill-link${isActive ? ' is-active' : ''}">${p.label}</a>`;
   }).join('');
@@ -177,6 +200,39 @@
     background: rgba(0,212,255,0.2);
     border-color: rgba(0,212,255,0.35);
   }
+  .wpill-dropdown { position: relative; display: inline-block; }
+  .wpill-dropdown-trigger {
+    background: transparent; cursor: pointer; font: inherit; color: inherit;
+  }
+  .wpill-dropdown-trigger .wpill-caret {
+    display: inline-block; margin-left: 4px; font-size: 10px; transition: transform .2s;
+  }
+  .wpill-dropdown.open .wpill-dropdown-trigger .wpill-caret { transform: rotate(180deg); }
+  .wpill-dropdown-menu {
+    position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(-4px);
+    min-width: 240px; padding: 8px;
+    background: rgba(8,18,42,0.96);
+    -webkit-backdrop-filter: blur(22px) saturate(1.6);
+    backdrop-filter: blur(22px) saturate(1.6);
+    border: 1px solid rgba(0,212,255,0.18);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;
+    z-index: 200001;
+  }
+  .wpill-dropdown.open .wpill-dropdown-menu {
+    opacity: 1; pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+  .wpill-dropdown-item {
+    display: block; padding: 10px 14px; font-size: 13px;
+    color: rgba(234,241,255,0.78); text-decoration: none;
+    border-radius: 10px;
+  }
+  .wpill-dropdown-item:hover {
+    color: #fff; background: rgba(0,212,255,0.14);
+  }
+  .wpill-dropdown-item.is-active { color: #fff; background: rgba(0,212,255,0.2); }
   .ticker-inject { padding-top: 88px; }
   .ticker-inject .ticker-wrap {
     background: #071428; border-color: rgba(0,212,255,0.12);
@@ -232,6 +288,40 @@ ${gaBlock}
     }
     window.addEventListener('hashchange', syncNavActive);
     syncNavActive();
+
+    // Dropdown open/close
+    document.querySelectorAll('#wpill-nav .wpill-dropdown').forEach(function (dd) {
+      const trigger = dd.querySelector('.wpill-dropdown-trigger');
+      const open = (val) => {
+        dd.classList.toggle('open', val);
+        trigger.setAttribute('aria-expanded', val ? 'true' : 'false');
+      };
+      let leaveTimer;
+      dd.addEventListener('mouseenter', () => { clearTimeout(leaveTimer); open(true); });
+      dd.addEventListener('mouseleave', () => { leaveTimer = setTimeout(() => open(false), 120); });
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        open(!dd.classList.contains('open'));
+      });
+      trigger.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open(!dd.classList.contains('open'));
+        } else if (e.key === 'Escape') {
+          open(false);
+          trigger.focus();
+        }
+      });
+    });
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll('#wpill-nav .wpill-dropdown.open').forEach(dd => {
+        if (!dd.contains(e.target)) {
+          dd.classList.remove('open');
+          const t = dd.querySelector('.wpill-dropdown-trigger');
+          if (t) t.setAttribute('aria-expanded', 'false');
+        }
+      });
+    });
 
     // Ticker — only when page includes a mount point
     if (document.querySelector('.ticker-inject')) {
