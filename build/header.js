@@ -104,6 +104,7 @@
   ];
 
   function navLinkIsActive(href) {
+    if (!href) return false;
     const hash = routeHash();
     const homeRoute = hash === "" || hash === "home";
     if (href === "index.html") return current === "index.html" && homeRoute;
@@ -202,7 +203,7 @@
   }
   .wpill-dropdown { position: relative; display: inline-block; }
   .wpill-dropdown-trigger {
-    background: transparent; cursor: pointer; font: inherit; color: inherit;
+    background: transparent; cursor: pointer; font-family: inherit;
   }
   .wpill-dropdown-trigger .wpill-caret {
     display: inline-block; margin-left: 4px; font-size: 10px; transition: transform .2s;
