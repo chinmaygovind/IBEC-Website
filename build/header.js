@@ -159,6 +159,10 @@
     border-radius: 50%; display: inline-block;
     box-shadow: 0 0 10px var(--coral);
   }
+  .wpill-logo {
+    height: 24px; width: auto; object-fit: contain;
+    margin-right: 4px;
+  }
   .wpill-links { display: flex; justify-content: center; gap: 4px; }
   .wpill-link {
     display: inline-block; padding: 8px 16px; font-size: 13px; line-height: 18px;
@@ -182,7 +186,7 @@
 <!-- Nav -->
 <nav class="wpill-nav" id="wpill-nav">
   <div class="wpill-bar">
-    <a href="${homeMarkHref}" class="wpill-mark"><span class="dot"></span>WIBEC</a>
+    <a href="${homeMarkHref}" class="wpill-mark"><img src="images/wibec-logo.png" class="wpill-logo" alt="WIBEC" />WIBEC</a>
     <div class="wpill-links">${navLinks}</div>
     <span></span>
   </div>
@@ -255,7 +259,7 @@ ${gaBlock}
             <h5>Explore</h5>
             <ul>
               <li><a href="index.html">Home</a></li>
-              <li><a href="index.html#/portfolio">Live Portfolio</a></li>
+              <li><a href="portfolio.html">Live Portfolio</a></li>
               <li><a href="index.html#/investment">Investment Committee</a></li>
               <li><a href="committees.html">Regional Committees</a></li>
               <li><a href="podcast.html">Podcast</a></li>
@@ -266,8 +270,7 @@ ${gaBlock}
             <ul>
               <li><a href="membership.html">Apply (Fall '26)</a></li>
               <li><a href="learn.html">Foundations Program</a></li>
-              <li><a href="#">Newsletter</a></li>
-              <li><a href="#">Alumni Network</a></li>
+              <li><a href="https://forms.gle/VkaBWcErvtSdt5hQ9" target="_blank" rel="noopener">Join the Newsroom</a></li>
             </ul>
           </div>
           <div>
@@ -276,8 +279,8 @@ ${gaBlock}
               <li>whartonibec@wharton.upenn.edu</li>
               <li>Huntsman Hall, 3730 Walnut</li>
               <li>Philadelphia, PA 19104</li>
-              <li style="margin-top:16px"><a class="u-link">LinkedIn &rarr;</a></li>
-              <li><a class="u-link">Instagram &rarr;</a></li>
+              <li style="margin-top:16px"><a class="u-link" href="https://www.linkedin.com/company/105025108" target="_blank" rel="noopener">LinkedIn &rarr;</a></li>
+              <li><a class="u-link" href="https://www.instagram.com/penn_wibec/" target="_blank" rel="noopener">Instagram &rarr;</a></li>
             </ul>
           </div>
         </div>
