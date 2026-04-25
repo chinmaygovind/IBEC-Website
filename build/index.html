@@ -810,65 +810,42 @@ function Home({ go }) {
 function CommitteePage() {
   return (
     <div className="page-enter">
+
+      {/* Hero */}
       <section style={{ padding:"64px 0 40px", borderBottom:"1px solid var(--rule)" }}>
         <div className="container-wide">
           <div className="page-header-meta">
             <span>§ Investment Committee</span>
-            <span>Spring 2026 Roster</span>
-            <span>Thursdays · 18:30 · Huntsman F65</span>
+            <span>Portfolio Governance</span>
+            <span>WIBEC Penn Fund</span>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"1.3fr 1fr", gap:64, alignItems:"end" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1.2fr 1fr", gap:64, alignItems:"end" }}>
             <h1 className="display" style={{ fontSize:"clamp(56px,7vw,108px)", margin:0 }}>
               The committee <em style={{ color:"var(--coral-ink)" }}>of&nbsp;record.</em>
             </h1>
             <p className="serif" style={{ fontSize:18, fontStyle:"italic", color:"var(--ink-700)", margin:0 }}>
-              Every position in the fund is approved by this committee. Members rotate annually; votes are by simple majority, minutes are public within the club.
+              The Investment Committee is the decision-making body responsible for managing the WIBEC Penn Fund. Composed of members appointed by the Executive Board, the IC reviews research and recommendations from regional committees, votes on portfolio changes, and ensures adherence to the Fund's Investment Policy Statement.
             </p>
           </div>
         </div>
       </section>
 
+      {/* Three roles */}
       <section style={{ padding:"64px 0", borderBottom:"1px solid var(--rule)" }}>
         <div className="container-wide">
           <div className="section-head">
-            <div><div className="n">§ 01 — Officers</div><h2>Eight seats at the table.</h2></div>
-            <p>Elected by the membership each April. Officers sit ex-officio on the investment committee alongside the six regional committee chairs.</p>
+            <div><div className="n">§ 01 — Roles</div><h2>How the IC operates.</h2></div>
+            <p>Three interconnected roles drive the Fund's investment process from research to execution.</p>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:0, borderTop:"1px solid var(--ink-900)" }}>
-            {OFFICERS.map((o,i) => (
-              <div key={o.name} style={{
-                padding:"28px 24px 32px",
-                borderRight:(i%4!==3)?"1px solid var(--rule)":"none",
-                borderBottom:i<4?"1px solid var(--rule)":"none",
-              }}>
-                <div style={{ aspectRatio:"4/5", overflow:"hidden", background:"var(--paper-3)" }}>
-                  <img src={o.photo} alt={o.name} style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center top" }} onError={e => { e.target.style.display="none"; e.target.parentNode.style.display="flex"; e.target.parentNode.style.alignItems="center"; e.target.parentNode.style.justifyContent="center"; e.target.parentNode.innerHTML=`<span style="font-family:var(--mono);font-size:11px;color:var(--ink-500)">${o.name}</span>`; }}/>
-                </div>
-                <div className="eyebrow" style={{ color:"var(--coral-ink)", marginTop:18 }}>{o.role}</div>
-                <h3 className="h-serif" style={{ fontSize:22, margin:"8px 0 4px" }}>{o.name}</h3>
-                <a href={`mailto:${o.email}`} className="mono" style={{ fontSize:11, color:"var(--coral-ink)", textDecoration:"none" }}>{o.email}</a>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section style={{ padding:"64px 0", background:"var(--paper-2)", borderBottom:"1px solid var(--rule)" }}>
-        <div className="container-wide">
-          <div className="section-head">
-            <div><div className="n">§ 02 — Process</div><h2>From idea to position.</h2></div>
-            <p>No position enters the book without a memo, a defense, and a vote. The point isn't the decision — it's the reasoning.</p>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:32 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:0, borderTop:"1px solid var(--ink-900)" }}>
             {[
-              { n:"01", t:"Idea.", b:"A pitch originates inside a regional committee — typically from a macro catalyst or an idiosyncratic security thesis being tracked by the committee." },
-              { n:"02", t:"Research memo.", b:"Committees draft pitches that include thesis, variant perception, valuation, catalysts, and risks. The regional lead edits for falsifiability." },
-              { n:"03", t:"Committee defense.", b:"Q&A is open floor. Officers and regional leads vote; a two-thirds majority is required to initiate a position." },
-              { n:"04", t:"Execution & monitoring.", b:"The Investment Committee leads sizing and execution. The thesis is re-litigated at every quarterly offsite or at a pre-declared trigger." },
-            ].map(s => (
-              <div key={s.n} style={{ paddingTop:24, borderTop:"1px solid var(--ink-900)", display:"flex", flexDirection:"column", gap:14 }}>
-                <div className="mono" style={{ fontSize:12, color:"var(--coral-ink)", letterSpacing:"0.14em" }}>{s.n} / 04</div>
-                <h3 className="h-serif" style={{ fontSize:30, margin:0 }}>{s.t}</h3>
+              { n:"01", t:"Executive Board.",      b:"Determines the composition of the Investment Committee, appoints and manages IC members, and oversees the strategic direction of the Fund." },
+              { n:"02", t:"Investment Committee.", b:"Holds decision rights for all portfolio changes, reviews recommendations, votes on trade approvals, and monitors compliance with the IPS." },
+              { n:"03", t:"Regional Committees.",  b:"Develop in-depth research and security recommendations within their respective geographic regions, feeding ideas up to the IC for review." },
+            ].map((s, i) => (
+              <div key={s.n} style={{ padding:"36px 32px 36px 0", borderRight:i<2?"1px solid var(--rule)":"none", paddingLeft:i>0?32:0 }}>
+                <div className="mono" style={{ fontSize:12, color:"var(--coral-ink)", letterSpacing:"0.14em" }}>{s.n} / 03</div>
+                <h3 className="h-serif" style={{ fontSize:28, margin:"12px 0 14px" }}>{s.t}</h3>
                 <p style={{ margin:0, fontSize:15, color:"var(--ink-500)", lineHeight:1.6 }}>{s.b}</p>
               </div>
             ))}
@@ -876,35 +853,100 @@ function CommitteePage() {
         </div>
       </section>
 
-      <section style={{ padding:"64px 0" }}>
+      {/* Investment Objective */}
+      <section style={{ padding:"64px 0", background:"var(--paper-2)", borderBottom:"1px solid var(--rule)" }}>
         <div className="container-wide">
           <div className="section-head">
-            <div><div className="n">§ 03 — Minutes</div><h2>From the record.</h2></div>
-            <p>A running index of decisions and their authors. Detail is available to members in the internal archive.</p>
+            <div><div className="n">§ 02 — Objective</div><h2>What we invest in.</h2></div>
+            <p>The Fund targets high total returns through a diversified public-markets portfolio while giving members practical experience in global macro awareness, security selection, portfolio construction, and risk management.</p>
           </div>
-          <div style={{ borderTop:"1px solid var(--ink-900)" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:32 }}>
             {[
-              { d:"Jan 06", t:"TMCV.NS and TMPV.NS exited — thesis complete", by:"Committee", r:"East Asia",    link:"images/portfolio/RiskReturnMetricsMarch82026.pdf" },
-              { d:"Nov 27", t:"FMX initiated — LatAm consumer thesis",         by:"Rey V.",    r:"Latin America",link:null },
-              { d:"Nov 27", t:"INFY initiated — South Asia IT services",        by:"Shawn G.",  r:"South Asia",  link:null },
-              { d:"Sep 09", t:"XFIV added — fixed income duration hedge",       by:"Committee", r:"Governance",  link:"IBEC_IPS.pdf" },
-              { d:"Mar 08", t:"Risk & return metrics report published",         by:"Committee", r:"Governance",  link:"images/portfolio/RiskReturnMetricsMarch82026.pdf" },
-            ].map((n,i) => (
-              <a key={i} href={n.link || "#"} target={n.link ? "_blank" : undefined} rel="noopener"
-                style={{ display:"grid", gridTemplateColumns:"100px 1fr 160px 140px 40px", gap:20, padding:"24px 0", borderBottom:"1px solid var(--rule)", alignItems:"center", textDecoration:"none", color:"inherit",
-                  opacity: n.link ? 1 : 0.6, cursor: n.link ? "pointer" : "default" }}
-                onMouseEnter={e => { if (n.link) e.currentTarget.style.background="rgba(223,115,102,0.04)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background="transparent"; }}>
-                <span className="mono" style={{ fontSize:13, color:"var(--ink-900)" }}>{n.d}</span>
-                <span className="h-serif" style={{ fontSize:22 }}>{n.t}</span>
-                <span className="mono" style={{ fontSize:12, color:"var(--ink-500)" }}>{n.by}</span>
-                <span className="kind-badge" style={{ justifySelf:"start" }}>{n.r}</span>
-                <span style={{ textAlign:"right", color: n.link ? "var(--coral-ink)" : "var(--ink-500)" }}>{n.link ? "↗" : "—"}</span>
-              </a>
+              { t:"Equities",          b:"Publicly traded common stocks, ADRs, and equity ETFs across all market capitalizations." },
+              { t:"Fixed Income",      b:"U.S. Treasuries and agencies, investment-grade corporate bonds, and sovereign bonds of developed and select emerging markets." },
+              { t:"Alternatives",      b:"Liquid, exchange-traded exposures such as listed REITs, commodity ETFs, listed infrastructure, and listed private equity vehicles." },
+              { t:"Cash & Equivalents",b:"U.S. Treasury bills, government money-market funds, and similar high-liquidity instruments." },
+            ].map(it => (
+              <div key={it.t} style={{ padding:"24px 28px", background:"#fff", border:"1px solid var(--rule)" }}>
+                <h4 className="h-serif" style={{ fontSize:20, margin:"0 0 10px" }}>{it.t}</h4>
+                <p style={{ margin:0, fontSize:14, color:"var(--ink-500)", lineHeight:1.6 }}>{it.b}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* Strategic Asset Allocation */}
+      <section style={{ padding:"64px 0", borderBottom:"1px solid var(--rule)" }}>
+        <div className="container-wide">
+          <div className="section-head">
+            <div><div className="n">§ 03 — Allocation</div><h2>Targets &amp; bands.</h2></div>
+            <p>The Fund maintains target allocations with defined bands. If an allocation breaches its permitted range, the IC rebalances back within bounds.</p>
+          </div>
+          <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"2px solid var(--ink-900)" }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign:"left",  padding:"16px 0", fontFamily:"var(--mono)", fontSize:11, letterSpacing:"0.14em", textTransform:"uppercase", color:"var(--ink-500)", borderBottom:"1px solid var(--rule)" }}>Asset Class</th>
+                <th style={{ textAlign:"right", padding:"16px 0", fontFamily:"var(--mono)", fontSize:11, letterSpacing:"0.14em", textTransform:"uppercase", color:"var(--ink-500)", borderBottom:"1px solid var(--rule)" }}>Target</th>
+                <th style={{ textAlign:"right", padding:"16px 0", fontFamily:"var(--mono)", fontSize:11, letterSpacing:"0.14em", textTransform:"uppercase", color:"var(--ink-500)", borderBottom:"1px solid var(--rule)" }}>Permitted Range</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ["Equities",            "60%", "55% – 65%"],
+                ["Fixed Income",        "25%", "22% – 28%"],
+                ["Alternatives",        "10%",  "8% – 12%"],
+                ["Cash & Equivalents",  "5%",   "3% – 7%"],
+              ].map(([cls, tgt, range]) => (
+                <tr key={cls}>
+                  <td className="h-serif" style={{ fontSize:18, padding:"18px 0", borderBottom:"1px solid var(--rule)" }}>{cls}</td>
+                  <td className="num"     style={{ textAlign:"right", padding:"18px 0", borderBottom:"1px solid var(--rule)" }}>{tgt}</td>
+                  <td className="mono"    style={{ textAlign:"right", padding:"18px 0", borderBottom:"1px solid var(--rule)", fontSize:13, color:"var(--ink-500)" }}>{range}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Investment Process */}
+      <section style={{ padding:"64px 0", background:"var(--paper-2)", borderBottom:"1px solid var(--rule)" }}>
+        <div className="container-wide">
+          <div className="section-head">
+            <div><div className="n">§ 04 — Process</div><h2>From idea to position.</h2></div>
+            <p>From idea generation to ongoing monitoring, every step of the process is designed to mirror institutional best practices.</p>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:32 }}>
+            {[
+              { n:"01", t:"Idea generation.",   b:"Investment ideas originate from regional committees or any WIBEC member and are submitted for IC review." },
+              { n:"02", t:"Review & vote.",     b:"The IC discusses thesis quality, portfolio fit, and risk impact. Proposals are approved by simple majority of voting members when a quorum is present." },
+              { n:"03", t:"Execution & record.",b:"Approved trades are executed, recorded in the WIBEC fund trade log, and reflected in performance and risk reporting." },
+              { n:"04", t:"Monitor & exit.",    b:"Positions are reviewed regularly and may be reduced or exited if the thesis breaks, valuation reaches target, or a position causes guideline breaches." },
+            ].map(s => (
+              <div key={s.n} style={{ paddingTop:24, borderTop:"1px solid var(--ink-900)", display:"flex", flexDirection:"column", gap:14 }}>
+                <div className="mono" style={{ fontSize:12, color:"var(--coral-ink)", letterSpacing:"0.14em" }}>{s.n} / 04</div>
+                <h3 className="h-serif" style={{ fontSize:26, margin:0 }}>{s.t}</h3>
+                <p style={{ margin:0, fontSize:15, color:"var(--ink-500)", lineHeight:1.6 }}>{s.b}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* IPS Download CTA */}
+      <section style={{ padding:"96px 0", background:"var(--ink-900)", color:"var(--paper-2)" }}>
+        <div className="container-wide" style={{ textAlign:"center" }}>
+          <div className="eyebrow" style={{ color:"var(--coral)" }}>◆ Investment Policy Statement</div>
+          <h2 className="display" style={{ fontSize:"clamp(48px,6vw,96px)", margin:"16px 0 24px", color:"var(--paper-2)" }}>
+            Read the <em style={{ color:"var(--coral)" }}>IPS.</em>
+          </h2>
+          <p className="serif" style={{ fontSize:18, fontStyle:"italic", color:"rgba(255,255,255,0.85)", maxWidth:600, margin:"0 auto 36px" }}>
+            The IPS is the Fund's governing document for portfolio construction, permissible investments, risk limits, decision-making, and monitoring.
+          </p>
+          <a href="assets/IBEC_IPS.pdf" target="_blank" rel="noopener" className="btn btn-coral">Download IPS (PDF) <span className="arr">→</span></a>
+        </div>
+      </section>
+
     </div>
   );
 }
