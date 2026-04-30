@@ -26,7 +26,7 @@ The April 2026 WIBEC redesign (commits `1430da4`, `2f6a7c8`, `d86bcbc`, `060df4d
 | Newsroom signup form | `https://forms.gle/VkaBWcErvtSdt5hQ9` |
 | WIBEC logo | `build/images/wibec-logo.png` (added Apr 22) |
 | IPS PDF | `git show 276fa34:build/assets/IBEC_IPS.pdf` (restore) |
-| Club email | `whartonibec@wharton.upenn.edu` (NOT `wibec@wharton.upenn.edu`) |
+| Club email | `whartonibec@gmail.com` (NOT `wibec@wharton.upenn.edu`) |
 
 ---
 
@@ -40,7 +40,7 @@ The April 2026 WIBEC redesign (commits `1430da4`, `2f6a7c8`, `d86bcbc`, `060df4d
 
 **`build/assets/IBEC_IPS.pdf`** — restore from commit `276fa34`. Filename stays `IBEC_IPS.pdf` to preserve any external links.
 
-**Email rewrite:** every occurrence of `wibec@wharton.upenn.edu` (in `mailto:` links and rendered text) → `whartonibec@wharton.upenn.edu`. Search across all `build/*.html` and `build/header.js`. Do NOT touch `wibec` in URLs, paths, class names, IDs, or CSS variables.
+**Email rewrite:** every occurrence of `wibec@wharton.upenn.edu` (in `mailto:` links and rendered text) → `whartonibec@gmail.com`. Search across all `build/*.html` and `build/header.js`. Do NOT touch `wibec` in URLs, paths, class names, IDs, or CSS variables.
 
 **Favicon links:** every `<link rel="icon" type="image/x-icon" href="images/ibec.ico">` → `<link rel="icon" type="image/x-icon" href="images/wibec.ico">`. Apply across all 8+ HTML pages.
 
@@ -64,7 +64,7 @@ Home | Committees | Events | Live Portfolio | Learn ▾ | Podcast | Contact
 **Footer changes (in `header.js` lines 244-289):**
 - "Newsletter" link → label "Join the Newsroom", href `https://forms.gle/VkaBWcErvtSdt5hQ9`.
 - LinkedIn / Instagram links: add the real `href` (currently empty placeholders) — `https://www.linkedin.com/company/105025108` and `https://www.instagram.com/penn_wibec/`.
-- Email: `wibec@wharton.upenn.edu` → `whartonibec@wharton.upenn.edu`.
+- Email: `wibec@wharton.upenn.edu` → `whartonibec@gmail.com`.
 - "Live Portfolio" footer link → `portfolio.html`.
 
 ### C. Home — `build/index.html`
@@ -177,7 +177,7 @@ All photos already exist under `build/images/team/`.
 ### J. Contact — `build/contact.html`
 
 1. **Topic dropdown** — delete `<option>Press / Media</option>` (line 115).
-2. **Email** — every `wibec@wharton.upenn.edu` → `whartonibec@wharton.upenn.edu` (mailto + rendered, lines 30, 53, 69, 73, 77).
+2. **Email** — every `wibec@wharton.upenn.edu` → `whartonibec@gmail.com` (mailto + rendered, lines 30, 53, 69, 73, 77).
 3. The page intentionally has no officer directory — that lives on `board.html` now.
 
 ### K. Files to delete

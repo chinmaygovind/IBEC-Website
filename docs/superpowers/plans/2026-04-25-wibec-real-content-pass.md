@@ -112,7 +112,7 @@ Note the file list. Expected occurrences (as of writing): `build/header.js` (foo
 Use a single in-place sed (BSD/macOS uses `-i ''`):
 
 ```bash
-git grep -lz "wibec@wharton.upenn.edu" -- build/ | xargs -0 sed -i '' 's/wibec@wharton\.upenn\.edu/whartonibec@wharton.upenn.edu/g'
+git grep -lz "wibec@wharton.upenn.edu" -- build/ | xargs -0 sed -i '' 's/wibec@wharton\.upenn\.edu/whartonibec@gmail.com/g'
 ```
 
 - [ ] **Step 3 — Verify zero remaining matches**
@@ -123,7 +123,7 @@ git grep -n "wibec@wharton.upenn.edu" -- build/
 Expected: no output.
 
 ```bash
-git grep -n "whartonibec@wharton.upenn.edu" -- build/ | head -20
+git grep -n "whartonibec@gmail.com" -- build/ | head -20
 ```
 Expected: the same number of lines as the original Step 1 count, all using the new address.
 
@@ -138,7 +138,7 @@ Expected: only `.html` and `.js` files in `build/` listed; no CSS, no config fil
 
 ```bash
 git add build/
-git commit -m "Replace wibec@wharton.upenn.edu with whartonibec@wharton.upenn.edu site-wide"
+git commit -m "Replace wibec@wharton.upenn.edu with whartonibec@gmail.com site-wide"
 ```
 
 ---
@@ -1576,8 +1576,8 @@ Run through this checklist in the browser:
 - **Learn → Investment Foundations Program**: hero "Investment Foundations.", three pillars + 3 detail sections, certificate CTA.
 - **Learn → Board**: 8 officers + 6 chairs (14 total cards), all photos load, all mailto links work.
 - **Podcast**: headline reads "Insights From Wharton **And Beyond.**"; YouTube iframe plays the playlist.
-- **Contact**: Topic dropdown options are Recruiting / Speaking / Alumni / Other (no Press); all `mailto:` links use `whartonibec@wharton.upenn.edu`.
-- **Footer (every page)**: "Join the Newsroom" link opens `https://forms.gle/VkaBWcErvtSdt5hQ9`; LinkedIn + Instagram links work; email reads `whartonibec@wharton.upenn.edu`.
+- **Contact**: Topic dropdown options are Recruiting / Speaking / Alumni / Other (no Press); all `mailto:` links use `whartonibec@gmail.com`.
+- **Footer (every page)**: "Join the Newsroom" link opens `https://forms.gle/VkaBWcErvtSdt5hQ9`; LinkedIn + Instagram links work; email reads `whartonibec@gmail.com`.
 - **Browser tab**: favicon shows the WIBEC globe on every page.
 - **Pill nav**: WIBEC logo image renders at left; ticker bar shows live prices for the 10 portfolio symbols.
 

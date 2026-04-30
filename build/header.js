@@ -367,7 +367,7 @@ ${gaBlock}
           <div>
             <h5>Contact</h5>
             <ul>
-              <li>whartonibec@wharton.upenn.edu</li>
+              <li>whartonibec@gmail.com</li>
               <li>Huntsman Hall, 3730 Walnut</li>
               <li>Philadelphia, PA 19104</li>
               <li style="margin-top:16px"><a class="u-link" href="https://www.linkedin.com/company/105025108" target="_blank" rel="noopener">LinkedIn &rarr;</a></li>
